@@ -1,0 +1,134 @@
+---
+- name: Apache en PHP installeren
+  apt:
+    name:
+      - apache2
+      - php
+      - php-mysql
+      - php-curl
+      - php-gd
+      - php-xml
+      - php-mbstring
+      - libapache2-mod-php
+      - certbot
+      - python3-certbot-apache
+    state: present
+    update_cache: true
+
+- name: Apache modules inschakelen
+  apache2_module:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - rewrite
+    - ssl
+  notify: Apache herstarten
+
+- name: WordPress downloaden
+  get_url:
+    url: https://wordpress.org/latest.tar.gz
+    dest: /tmp/wordpress.tar.gz
+
+- name: WordPress uitpakken
+  unarchive:
+    src: /tmp/wordpress.tar.gz
+    dest: /var/www
+    remote_src: true
+    owner: www-data
+    group: www-data
+
+- name: wp-config.php aanmaken
+  template:
+    src: wp-config.php.j2
+    dest: "{{ wp_path }}/wp-config.php"
+    owner: www-data
+    group: www-data
+    mode: "0640"
+
+- name: Apache vhost aanmaken
+  template:
+    src: vhost.conf.j2
+    dest: /etc/apache2/sites-available/wordpress.conf
+  notify: Apache herstarten
+
+- name: WordPress site inschakelen
+  file:
+    src: /etc/apache2/sites-available/wordpress.conf
+    dest: /etc/apache2/sites-enabled/wordpress.conf
+    state: link
+  notify: Apache herstarten
+
+- name: Standaard site uitschakelen
+  file:
+    path: /etc/apache2/sites-enabled/000-default.conf
+    state: absent
+  notify: Apache herstarten
+
+- name: Handlers nu uitvoeren (Apache moet draaien voor certbot)
+  meta: flush_handlers
+
+- name: Let's Encrypt certificaat aanvragen via certbot
+  command:
+    cmd: >-
+      certbot --apache
+      -d {{ wp_domain }}
+      --non-interactive
+      --agree-tos
+      --email {{ certbot_email | default('jeroen.vanrenterghem@student.hogent.be') }}
+      --redirect
+    creates: /etc/letsencrypt/live/{{ wp_domain }}/fullchain.pem
+
+- name: WP-CLI downloaden
+  get_url:
+    url: https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar
+    dest: /usr/local/bin/wp
+    mode: "0755"
+
+- name: Controleer of WordPress al geïnstalleerd is
+  command:
+    cmd: wp core is-installed --path={{ wp_path }}
+  register: wp_installed
+  changed_when: false
+  failed_when: false
+  become_user: www-data
+
+- name: WordPress installeren via WP-CLI
+  command:
+    cmd: >-
+      wp core install
+      --path={{ wp_path }}
+      --url=https://{{ wp_domain }}
+      --title="{{ wp_title }}"
+      --admin_user={{ wp_admin_user }}
+      --admin_password={{ wp_admin_password }}
+      --admin_email={{ wp_admin_email }}
+      --locale={{ wp_locale }}
+  become_user: www-data
+  when: wp_installed.rc != 0
+
+- name: WordPress taal instellen
+  command:
+    cmd: wp language core install {{ wp_locale }} --activate --path={{ wp_path }}
+  become_user: www-data
+  register: wp_lang
+  changed_when: "'already installed' not in wp_lang.stdout"
+
+- name: Understrap theme installeren en activeren
+  command:
+    cmd: wp theme install understrap --activate --path={{ wp_path }}
+  become_user: www-data
+  register: wp_theme
+  changed_when: "'already installed' not in wp_theme.stdout"
+
+- name: wp alias toevoegen aan ansible gebruiker bashrc
+  lineinfile:
+    path: "/home/{{ ansible_user }}/.bashrc"
+    regexp: '^alias wp='
+    line: "alias wp='wp --path={{ wp_path }}'"
+    create: true
+
+- name: Ansible gebruiker toevoegen aan www-data groep
+  user:
+    name: "{{ ansible_user }}"
+    groups: www-data
+    append: true

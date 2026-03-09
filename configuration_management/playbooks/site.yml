@@ -1,0 +1,87 @@
+---
+- name: Volledige WordPress stack
+  hosts: all
+  become: true
+  gather_subset: min
+  vars_files:
+    - ../vault.yml
+  vars:
+    wp_domain: sel-opdracht4.groep99.be
+    wp_path: /var/www/wordpress
+
+    # Azure MySQL Flexible Server verbinding
+    # Deze kunnen overschreven worden via -e / --extra-vars (de Makefile doet
+    # dit automatisch vanuit Terraform output).
+    wp_db_host: "{{ tf_mysql_fqdn | default('jr-wordpressdb.mysql.database.azure.com') }}"
+    wp_db_name: wordpress
+    wp_db_user: wpuser
+    wp_db_admin_user: "{{ tf_mysql_admin_login | default('wordpressdb') }}"
+    wp_db_port: 3306
+    wp_db_ssl: true
+
+    # WordPress admin account
+    wp_admin_user: osboxes
+    wp_admin_email: jeroen.vanrenterghem@student.hogent.be
+    wp_title: "SELab Opdracht 4 - Groep 99"
+    wp_locale: nl_BE
+
+    skip_common: false
+
+  roles:
+    - role: common
+      when: not skip_common
+    - mysql_client
+    - wordpress
+
+  post_tasks:
+    - name: Toon verbindingsinformatie
+      debug:
+        msg:
+          - "=========================================="
+          - "WordPress is beschikbaar op:"
+          - "https://{{ wp_domain }}"
+          - ""
+          - "MySQL: {{ wp_db_host }}:{{ wp_db_port }}"
+          - "=========================================="
+
+- name: Lokale SSH config bijwerken
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  vars:
+    ssh_config_path: "{{ lookup('env', 'HOME') }}/.ssh/config"
+    ssh_host_alias: azosboxes
+    ssh_key: "{{ lookup('env', 'HOME') }}/.ssh/id_ed25519_hogent"
+  tasks:
+    - name: Backup maken van SSH config
+      copy:
+        src: "{{ ssh_config_path }}"
+        dest: "{{ ssh_config_path }}.bak"
+        remote_src: true
+        mode: "0600"
+      when: ssh_config_path is file
+
+    - name: SSH config bestand aanmaken als het niet bestaat
+      file:
+        path: "{{ ssh_config_path }}"
+        state: touch
+        mode: "0600"
+      changed_when: false
+
+    - name: Bestaand azosboxes blok verwijderen
+      blockinfile:
+        path: "{{ ssh_config_path }}"
+        marker: "# {mark} ANSIBLE MANAGED - {{ ssh_host_alias }}"
+        state: absent
+
+    - name: SSH config blok voor azosboxes toevoegen
+      blockinfile:
+        path: "{{ ssh_config_path }}"
+        marker: "# {mark} ANSIBLE MANAGED - {{ ssh_host_alias }}"
+        block: |
+          Host {{ ssh_host_alias }}
+              HostName {{ hostvars[groups['all'][0]]['ansible_host'] }}
+              User {{ hostvars[groups['all'][0]]['ansible_user'] | default('osboxes') }}
+              IdentityFile {{ ssh_key }}
+              StrictHostKeyChecking no
+              UserKnownHostsFile /dev/null

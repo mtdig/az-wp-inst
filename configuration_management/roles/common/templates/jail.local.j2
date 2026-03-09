@@ -1,0 +1,11 @@
+[DEFAULT]
+bantime = 1h
+findtime = 10m
+maxretry = 3
+ignoreip = 127.0.0.1/8 ::1 {{ ansible_host }}
+
+[sshd]
+enabled = true
+port = ssh
+filter = sshd
+logpath = /var/log/auth.log

@@ -1,0 +1,11 @@
+<VirtualHost *:80>
+    ServerName {{ wp_domain }}
+    DocumentRoot {{ wp_path }}
+
+    <Directory {{ wp_path }}>
+        AllowOverride All
+        Require all granted
+    </Directory>
+</VirtualHost>
+
+{# Certbot voegt automatisch de SSL VirtualHost en redirect toe #}

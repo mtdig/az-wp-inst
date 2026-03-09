@@ -1,0 +1,26 @@
+---
+- name: MariaDB installeren
+  apt:
+    name: [mariadb-server, python3-pymysql]
+    state: present
+    update_cache: false
+
+- name: MariaDB starten
+  service:
+    name: mariadb
+    state: started
+    enabled: true
+
+- name: WordPress databank aanmaken
+  mysql_db:
+    name: "{{ wp_db_name }}"
+    state: present
+    login_unix_socket: /var/run/mysqld/mysqld.sock
+
+- name: WordPress DB gebruiker aanmaken
+  mysql_user:
+    name: "{{ wp_db_user }}"
+    password: "{{ db_wp_password }}"
+    priv: "{{ wp_db_name }}.*:ALL"
+    state: present
+    login_unix_socket: /var/run/mysqld/mysqld.sock

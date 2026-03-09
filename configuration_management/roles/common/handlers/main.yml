@@ -1,0 +1,10 @@
+---
+- name: SSH herstarten
+  service:
+    name: ssh
+    state: restarted
+
+- name: fail2ban herstarten
+  service:
+    name: fail2ban
+    state: restarted

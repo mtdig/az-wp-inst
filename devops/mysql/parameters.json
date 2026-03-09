@@ -1,0 +1,91 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "serverName": {
+            "value": "jr-wordpressdb"
+        },
+        "location": {
+            "value": "francecentral"
+        },
+        "serverEdition": {
+            "value": "Burstable"
+        },
+        "vCores": {
+            "value": 1
+        },
+        "storageSizeGB": {
+            "value": 20
+        },
+        "haEnabled": {
+            "value": "Disabled"
+        },
+        "firewallRules": {
+            "value": {
+                "rules": [
+                    {
+                        "name": "ClientIPAddress_2026-3-9_8-1-46",
+                        "startIPAddress": "85.201.54.83",
+                        "endIPAddress": "85.201.54.83"
+                    }
+                ]
+            }
+        },
+        "backupRetentionDays": {
+            "value": 7
+        },
+        "geoRedundantBackup": {
+            "value": "Disabled"
+        },
+        "availabilityZone": {
+            "value": ""
+        },
+        "vmName": {
+            "value": "Standard_B1ms"
+        },
+        "storageIops": {
+            "value": 360
+        },
+        "storageAutogrow": {
+            "value": "Enabled"
+        },
+        "acceleratedLogs": {
+            "value": "Disabled"
+        },
+        "standbyAvailabilityZone": {
+            "value": ""
+        },
+        "autoIoScaling": {
+            "value": "Enabled"
+        },
+        "guid": {
+            "value": "ed5dd07905ab46a296aee1a94dd19f67"
+        },
+        "serverParameters": {
+            "value": []
+        },
+        "apiVersion": {
+            "value": "2025-06-01-preview"
+        },
+        "network": {
+            "value": {
+                "publicNetworkAccess": "Enabled"
+            }
+        },
+        "tags": {
+            "value": {}
+        },
+        "administratorLogin": {
+            "value": "wordpressdb"
+        },
+        "administratorLoginPassword": {
+            "value": null
+        },
+        "version": {
+            "value": "8.0.21"
+        },
+        "lowerCaseTableNames": {
+            "value": 1
+        }
+    }
+}

@@ -1,0 +1,28 @@
+<?php
+define('DB_NAME', '{{ wp_db_name }}');
+define('DB_USER', '{{ wp_db_user }}');
+define('DB_PASSWORD', '{{ db_wp_password }}');
+define('DB_HOST', '{{ wp_db_host }}:{{ wp_db_port }}');
+define('DB_CHARSET', 'utf8mb4');
+define('DB_COLLATE', '');
+
+{% if wp_db_ssl | default(true) %}
+define('MYSQL_CLIENT_FLAGS', MYSQLI_CLIENT_SSL);
+{% endif %}
+
+define('AUTH_KEY',         '{{ lookup("password", "/dev/null length=64") }}');
+define('SECURE_AUTH_KEY',  '{{ lookup("password", "/dev/null length=64") }}');
+define('LOGGED_IN_KEY',    '{{ lookup("password", "/dev/null length=64") }}');
+define('NONCE_KEY',        '{{ lookup("password", "/dev/null length=64") }}');
+define('AUTH_SALT',        '{{ lookup("password", "/dev/null length=64") }}');
+define('SECURE_AUTH_SALT', '{{ lookup("password", "/dev/null length=64") }}');
+define('LOGGED_IN_SALT',   '{{ lookup("password", "/dev/null length=64") }}');
+define('NONCE_SALT',       '{{ lookup("password", "/dev/null length=64") }}');
+
+$table_prefix = 'wp_';
+define('WP_DEBUG', false);
+
+if (!defined('ABSPATH')) {
+    define('ABSPATH', __DIR__ . '/');
+}
+require_once ABSPATH . 'wp-settings.php';

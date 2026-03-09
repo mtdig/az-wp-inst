@@ -1,0 +1,98 @@
+---
+- name: SSH beveiligen
+  lineinfile:
+    path: /etc/ssh/sshd_config
+    regexp: "{{ item.regexp }}"
+    line: "{{ item.line }}"
+  loop:
+    - { regexp: '^#?PasswordAuthentication', line: 'PasswordAuthentication no' }
+    - { regexp: '^#?PubkeyAuthentication', line: 'PubkeyAuthentication yes' }
+    - { regexp: '^#?PermitRootLogin', line: 'PermitRootLogin prohibit-password' }
+    - { regexp: '^#?ChallengeResponseAuthentication', line: 'ChallengeResponseAuthentication no' }
+  notify: SSH herstarten
+
+- name: Pakketten installeren
+  apt:
+    name: [ufw, fail2ban, neofetch]
+    state: present
+    update_cache: true
+  register: pkg_install
+
+- name: Verbinding resetten om nieuwe binaries op te pikken
+  meta: reset_connection
+  when: pkg_install.changed
+
+# UFW module is zeer traag (~50s) omdat elke aanroep een nieuwe verbinding opent
+# Shell gebruiken duurt in totaal ~2s
+# Niet ideaal, maar veel sneller voor dit gebruik en misschien de demo
+#
+# - name: UFW standaardbeleid configureren
+#   ufw:
+#     direction: "{{ item.direction }}"
+#     policy: "{{ item.policy }}"
+#   loop:
+#     - { direction: incoming, policy: deny }
+#     - { direction: outgoing, policy: allow }
+#
+# - name: UFW poorten toestaan
+#   ufw:
+#     rule: allow
+#     port: "{{ item }}"
+#     proto: tcp
+#   loop:
+#     - "22"
+#     - "80"
+#     - "443"
+#     - "3306"
+#
+# - name: UFW inschakelen
+#   ufw:
+#     state: enabled
+
+- name: Configure UFW
+  shell: |
+    ufw --force reset
+    ufw default deny incoming
+    ufw default allow outgoing
+    ufw allow 22/tcp
+    ufw allow 80/tcp
+    ufw allow 443/tcp
+    ufw --force enable
+  args:
+    executable: /bin/bash
+  changed_when: true
+
+- name: fail2ban configureren
+  template:
+    src: jail.local.j2
+    dest: /etc/fail2ban/jail.local
+  notify: fail2ban herstarten
+
+- name: fail2ban inschakelen
+  service:
+    name: fail2ban
+    state: started
+    enabled: true
+
+- name: neofetch toevoegen aan root bashrc
+  lineinfile:
+    path: /root/.bashrc
+    regexp: '^.*neofetch.*$'
+    line: 'neofetch'
+    create: true
+
+- name: neofetch toevoegen aan ansible gebruiker bashrc
+  lineinfile:
+    path: "/home/{{ ansible_user }}/.bashrc"
+    regexp: '^.*neofetch.*$'
+    line: 'neofetch'
+    create: true
+
+- name: Sudo groep toestaan om sudo te gebruiken zonder wachtwoord
+  lineinfile:
+    path: /etc/sudoers.d/sudo-nopasswd
+    line: '%sudo ALL=(ALL) NOPASSWD: ALL'
+    create: true
+    validate: 'visudo -cf %s'
+    mode: "0440"
+  when: ansible_user != 'root'
