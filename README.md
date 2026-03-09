@@ -138,7 +138,7 @@ De volgende maatregelen worden automatisch toegepast:
 
 | Maatregel | Beschrijving |
 |---|---|
-| **Wordfence** | Firewall + malware scanner (licentie wordt automatisch geactiveerd via `vault.yml`) |
+| **Wordfence** | Firewall + malware scanner (gratis licentie accepteren via WP dashboard) |
 | **Limit Login Attempts Reloaded** | Brute-force bescherming op wp-login.php |
 | **Disable XML-RPC Pingback** | Blokkeert XML-RPC misbruik (DDoS amplificatie, credential brute-force) |
 | **fail2ban – wordpress-login** | Bant IP's op serverniveau na 5 mislukte inlogpogingen in 5 min |

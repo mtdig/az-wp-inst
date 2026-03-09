@@ -134,13 +134,6 @@
   register: wp_security_plugins
   changed_when: "'already installed' not in wp_security_plugins.stdout"
 
-- name: Wordfence licentie activeren
-  command:
-    cmd: wp option update wordfence_apiKey "{{ wordfence_license }}" --path={{ wp_path }}
-  become_user: www-data
-  changed_when: true
-  when: wordfence_license is defined and wordfence_license | length > 0
-
 # =========================================================================
 # Apache beveiliging
 # =========================================================================
