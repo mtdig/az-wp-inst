@@ -9,3 +9,12 @@ enabled = true
 port = ssh
 filter = sshd
 logpath = /var/log/auth.log
+
+[wordpress-login]
+enabled = true
+port = http,https
+filter = wordpress-login
+logpath = /var/log/apache2/access.log
+maxretry = 5
+findtime = 5m
+bantime = 30m

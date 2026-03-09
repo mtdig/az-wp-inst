@@ -19,7 +19,7 @@ SSH_KEY     ?= ~/.ssh/id_ed25519_hogent
 SSH_PUB_KEY ?= $(SSH_KEY).pub
 
 # ---------------------------------------------------------------------------
-# Geheimen – geef mee via de commandoregel of exporteer als omgevingsvariabelen
+# Secrets – geef mee via de commandoregel of exporteer als omgevingsvariabelen
 #   make apply MYSQL_PASS=...
 #   export MYSQL_PASS=... && make all
 # ---------------------------------------------------------------------------

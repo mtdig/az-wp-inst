@@ -1,0 +1,36 @@
+# Apache beveiligingsconfiguratie – beheerd door Ansible
+# =====================================================
+
+# Serverversie verbergen
+ServerTokens Prod
+ServerSignature Off
+
+# Beveiligingsheaders
+Header always set X-Content-Type-Options "nosniff"
+Header always set X-Frame-Options "SAMEORIGIN"
+Header always set X-XSS-Protection "1; mode=block"
+Header always set Referrer-Policy "strict-origin-when-cross-origin"
+Header always set Permissions-Policy "geolocation=(), camera=(), microphone=()"
+
+# XML-RPC volledig blokkeren (veelgebruikt aanvalsvector voor bots)
+<Files "xmlrpc.php">
+    Require all denied
+</Files>
+
+# wp-config.php beschermen
+<Files "wp-config.php">
+    Require all denied
+</Files>
+
+# .htaccess en andere verborgen bestanden blokkeren
+<FilesMatch "^\.">
+    Require all denied
+</FilesMatch>
+
+# Directory listing uitschakelen
+Options -Indexes
+
+# Blokkeer toegang tot gevoelige bestanden
+<FilesMatch "(readme\.html|license\.txt|wp-config-sample\.php)$">
+    Require all denied
+</FilesMatch>

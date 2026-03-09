@@ -1,0 +1,8 @@
+# fail2ban filter voor WordPress login brute-force
+# Detecteert herhaalde POST requests naar wp-login.php
+#
+# Beheerd door Ansible
+
+[Definition]
+failregex = ^<HOST> .* "POST /wp-login\.php
+ignoreregex =

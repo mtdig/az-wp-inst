@@ -120,6 +120,42 @@
   register: wp_theme
   changed_when: "'already installed' not in wp_theme.stdout"
 
+# =========================================================================
+# Beveiligingsplugins
+# =========================================================================
+- name: Beveiligingsplugins installeren en activeren
+  command:
+    cmd: wp plugin install {{ item }} --activate --path={{ wp_path }}
+  become_user: www-data
+  loop:
+    - wordfence            # Firewall + malware scanner
+    - limit-login-attempts-reloaded  # Brute-force bescherming op wp-login
+    - disable-xml-rpc-pingback       # Blokkeert XML-RPC misbruik (DDoS, brute-force)
+  register: wp_security_plugins
+  changed_when: "'already installed' not in wp_security_plugins.stdout"
+
+# =========================================================================
+# Apache beveiliging
+# =========================================================================
+- name: Apache headers module inschakelen
+  apache2_module:
+    name: headers
+    state: present
+  notify: Apache herstarten
+
+- name: Apache beveiligingsconfiguratie aanmaken
+  template:
+    src: security.conf.j2
+    dest: /etc/apache2/conf-available/security-hardening.conf
+  notify: Apache herstarten
+
+- name: Apache beveiligingsconfiguratie inschakelen
+  file:
+    src: /etc/apache2/conf-available/security-hardening.conf
+    dest: /etc/apache2/conf-enabled/security-hardening.conf
+    state: link
+  notify: Apache herstarten
+
 - name: wp alias toevoegen aan ansible gebruiker bashrc
   lineinfile:
     path: "/home/{{ ansible_user }}/.bashrc"

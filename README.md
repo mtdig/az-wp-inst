@@ -118,7 +118,7 @@ opdracht4/
 ├── configuration_management/    # Ansible root
 │   ├── ansible.cfg
 │   ├── inventory.yml
-│   ├── vault.yml                # Versleutelde geheimen
+│   ├── vault.yml                # encrypted secrets (voor deze opdracht niet encrypted)
 │   ├── README.md
 │   ├── playbooks/
 │   │   └── site.yml
@@ -131,6 +131,23 @@ opdracht4/
     ├── mysql/
     └── ubuntu/
 ```
+
+## Beveiliging
+
+De volgende maatregelen worden automatisch toegepast:
+
+| Maatregel | Beschrijving |
+|---|---|
+| **Wordfence** | Application firewall + malware scanner |
+| **Limit Login Attempts Reloaded** | Brute-force bescherming op wp-login.php |
+| **Disable XML-RPC Pingback** | Blokkeert XML-RPC misbruik (DDoS amplificatie, credential brute-force) |
+| **fail2ban – wordpress-login** | Bant IP's op serverniveau na 5 mislukte inlogpogingen in 5 min |
+| **fail2ban – sshd** | Bant IP's na 3 mislukte SSH pogingen |
+| **Apache hardening** | Verbergt serverversie, blokkeert `xmlrpc.php`, beveiligingsheaders (X-Frame-Options, CSP, etc.) |
+| **wp-config hardening** | Bestandseditor uitgeschakeld, HTTPS admin afgedwongen, auto security-updates |
+| **UFW firewall** | Alleen poort 22, 80, 443 open |
+| **SSH hardening** | Wachtwoord-login uitgeschakeld, alleen pubkey authenticatie |
+| **Let's Encrypt SSL** | HTTPS met automatische redirect |
 
 ## Na deployment
 

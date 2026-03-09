@@ -68,6 +68,12 @@
     dest: /etc/fail2ban/jail.local
   notify: fail2ban herstarten
 
+- name: fail2ban WordPress login filter installeren
+  template:
+    src: wordpress-login.conf.j2
+    dest: /etc/fail2ban/filter.d/wordpress-login.conf
+  notify: fail2ban herstarten
+
 - name: fail2ban inschakelen
   service:
     name: fail2ban

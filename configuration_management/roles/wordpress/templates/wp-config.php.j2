@@ -22,6 +22,12 @@ define('NONCE_SALT',       '{{ lookup("password", "/dev/null length=64") }}');
 $table_prefix = 'wp_';
 define('WP_DEBUG', false);
 
+/* Beveiliging */
+define('DISALLOW_FILE_EDIT', true);      // Bestandseditor uitschakelen in dashboard
+define('FORCE_SSL_ADMIN', true);          // Admin altijd via HTTPS
+define('WP_AUTO_UPDATE_CORE', 'minor');   // Automatische beveiligingsupdates
+define('WP_POST_REVISIONS', 5);           // Revisies beperken
+
 if (!defined('ABSPATH')) {
     define('ABSPATH', __DIR__ . '/');
 }
