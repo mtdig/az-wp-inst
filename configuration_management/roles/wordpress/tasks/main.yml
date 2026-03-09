@@ -128,7 +128,7 @@
     cmd: wp plugin install {{ item }} --activate --path={{ wp_path }}
   become_user: www-data
   loop:
-    - sucuri-scanner                  # Security audit, malware scanner, hardening
+    - wordfence                      # Firewall + malware scanner
     - limit-login-attempts-reloaded  # Brute-force bescherming op wp-login
     - disable-xml-rpc-pingback       # Blokkeert XML-RPC misbruik (DDoS, brute-force)
   register: wp_security_plugins
