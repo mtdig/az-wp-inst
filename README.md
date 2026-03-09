@@ -1,6 +1,7 @@
 # Opdracht 4 – WordPress op Azure
 
-Volledig geautomatiseerde deployment van een WordPress stack op Azure met **Terraform** voor provisioning en **Ansible** voor configuratiebeheer, samengebracht met één **Makefile**.
+Volledig geautomatiseerde deployment van een WordPress stack op Azure met **Terraform** voor provisioning en **Ansible** voor configuratiebeheer.  We gebruiken **Makefile** om deze uit te voeren.
+
 
 ## Wat wordt er aangemaakt
 
@@ -17,21 +18,25 @@ Volledig geautomatiseerde deployment van een WordPress stack op Azure met **Terr
 | [Azure CLI](https://learn.microsoft.com/cli/azure/install-azure-cli) | Authenticatie (`az login`) |
 | [uv](https://astral.sh/uv) | Python/Ansible dependency beheer |
 | SSH sleutelpaar | Standaard: `~/.ssh/id_ed25519_hogent` |
+| [Make](https://makefiletutorial.com/) | Makefile command runner |
 
-Op **NixOS** kan je de dev shell opstarten met `nix develop` om alle tools te krijgen.
+
+Op **NixOS** kan je de dev shell opstarten met `nix develop`.
 
 ## Snel aan de slag
 
 ```bash
-# 1. Log in bij Azure
+# 1. Log in bij Azure, opent browser voor login
 az login
 
 # 2. Stel je subscription ID in via provisioning/terraform.tfvars
 
 # 3. Deploy alles
+export MYSQL_PASS="JouwVeiligWachtwoord123!"
 make init
-make all MYSQL_PASS="JouwVeiligWachtwoord123!"
+make all
 ```
+
 
 Dat is alles. WordPress draait op het publieke IP van de VM.
 
@@ -48,9 +53,10 @@ Voer `make` of `make help` uit om alle targets te zien:
 | `make all` | **`apply` + `configure`** in één keer |
 | `make info` | Huidige Terraform outputs tonen (IPs, FQDNs, …) |
 | `make destroy` | Alle Azure resources verwijderen |
+| `destroy-vm` | Enkel de VM en dependencies verwijderen (netwerk, compute) |
 | `make clean` | Lokale Terraform state & cache opruimen |
 
-### Geheimen doorgeven
+### Secrets doorgeven
 
 Het MySQL admin wachtwoord **moet** meegegeven worden. De SSH publieke sleutel wordt automatisch gelezen van `~/.ssh/id_ed25519_hogent.pub`.
 
@@ -147,5 +153,6 @@ ssh osboxes@$(cd provisioning && terraform output -raw public_ip_address)
 ## Opruimen
 
 ```bash
-make destroy MYSQL_PASS="JouwVeiligWachtwoord123!"
+make destroy MYSQL_PASS="JouwVeiligWachtwoord123!" 
 ```
+_* of een ander complex wachtwoord, dit wordt niet gebruikt, maar de complixiteit ervan wordt wel gecontroleerd_
