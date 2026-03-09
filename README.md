@@ -793,3 +793,10 @@ Playbook run took 0 days, 0 hours, 3 minutes, 20 seconds
 
 $
 ```
+
+profit
+
+![blog](img/website.png)
+
+![wpadmin](img/wpadmin.png)
+
