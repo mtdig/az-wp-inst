@@ -2,6 +2,8 @@
 
 Volledig geautomatiseerde deployment van een WordPress stack op Azure met **Terraform** voor provisioning en **Ansible** voor configuratiebeheer.  We gebruiken **Makefile** om deze uit te voeren.
 
+> TODO: verplaats hardcoded values uit ansible playbook/TF config naar top level vars / env vars (email in site.yaml ...)
+
 
 ## Wat wordt er aangemaakt
 
@@ -16,7 +18,7 @@ Volledig geautomatiseerde deployment van een WordPress stack op Azure met **Terr
 |---|---|
 | [Terraform](https://developer.hashicorp.com/terraform/install) ≥ 1.5 | Infrastructuur provisioning |
 | [Azure CLI](https://learn.microsoft.com/cli/azure/install-azure-cli) | Authenticatie (`az login`) |
-| [uv](https://astral.sh/uv) | Python/Ansible dependency beheer |
+| [uv](https://astral.sh/uv) | Python (voor ansible) dependency beheer |
 | SSH sleutelpaar | Standaard: `~/.ssh/id_ed25519_hogent` |
 | [Make](https://makefiletutorial.com/) | Makefile command runner |
 

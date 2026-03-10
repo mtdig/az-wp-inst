@@ -3,6 +3,8 @@
 Geleend van uitbreiding SEL Opdracht 3: Installeer een database en web server. En zo ...
 
 > needs update na copy/paste
+>
+> TODO: verplaats hardcoded values naar top level vars / env vars
 
 Een vereenvoudigde automatische installatie van een WordPress stack op een Azure VM met Apache, PHP en een **Azure MySQL Flexible Server** als database backend.
 

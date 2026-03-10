@@ -1,13 +1,13 @@
 # =============================================================================
 #  Opdracht 4 – Makefile
-#  Verbindt Terraform (provisioning) en Ansible (configuration_management)
+#  Runnning Terraform (provisioning) en Ansible (configuration_management)
 # =============================================================================
 
 SHELL           := bash
 .DEFAULT_GOAL   := help
 
 # ---------------------------------------------------------------------------
-# Mappen
+# Directories
 # ---------------------------------------------------------------------------
 TF_DIR   := provisioning
 ANSIBLE_DIR := configuration_management
@@ -19,14 +19,14 @@ SSH_KEY     ?= ~/.ssh/id_ed25519_hogent
 SSH_PUB_KEY ?= $(SSH_KEY).pub
 
 # ---------------------------------------------------------------------------
-# Secrets – geef mee via de commandoregel of exporteer als omgevingsvariabelen
+# Secrets – geef mee via command of export als omgevingsvariabelen
 #   make apply MYSQL_PASS=...
 #   export MYSQL_PASS=... && make all
 # ---------------------------------------------------------------------------
 MYSQL_PASS ?= $(TF_VAR_mysql_admin_password)
 
 # ---------------------------------------------------------------------------
-# Terraform hulpfuncties
+# Terraform helpers
 # ---------------------------------------------------------------------------
 TF       := terraform -chdir=$(TF_DIR)
 TF_FLAGS := -var="admin_public_key=$$(cat $(SSH_PUB_KEY))"
@@ -43,7 +43,7 @@ $(shell $(TF) output -raw $(1) 2>/dev/null)
 endef
 
 # =============================================================================
-#  Doelen
+#  Targets
 # =============================================================================
 
 .PHONY: help init plan apply configure all destroy clean info
@@ -88,17 +88,17 @@ configure: ## Ansible playbook uitvoeren met Terraform outputs
 		$(if $(MYSQL_PASS),-e "db_admin_password=$(MYSQL_PASS)")
 
 # ---------------------------------------------------------------------------
-# Gecombineerde doelen
+# Gecombineerde targets
 # ---------------------------------------------------------------------------
-all: apply configure ## Provisioning + configuratie in één keer
+all: apply configure
 
 # ---------------------------------------------------------------------------
-# Opruimen
+# cleanup
 # ---------------------------------------------------------------------------
 destroy: ## Alle Azure resources verwijderen
 	$(TF) destroy $(TF_FLAGS) -var="mysql_admin_password=Destroy-1!" -auto-approve
 
-destroy-vm: ## Enkel de VM en afhankelijkheden verwijderen (netwerk, compute)
+destroy-vm: ## Enkel de VM en dependencies verwijderen (netwerk, compute)
 	$(TF) destroy $(TF_FLAGS) -var="mysql_admin_password=Destroy-1!" -auto-approve \
 		-target=module.compute \
 		-target=module.network
@@ -108,7 +108,7 @@ clean: ## Lokale Terraform state & cache verwijderen
 	rm -f  $(TF_DIR)/terraform.tfstate $(TF_DIR)/terraform.tfstate.backup
 
 # ---------------------------------------------------------------------------
-# Informatie
+# info
 # ---------------------------------------------------------------------------
-info: ## Huidige Terraform outputs tonen
+info: ## Terraform outputs tonen
 	@$(TF) output
