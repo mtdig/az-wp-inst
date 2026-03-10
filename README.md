@@ -180,7 +180,7 @@ _* of een ander complex wachtwoord, dit wordt niet gebruikt, maar de complixitei
 ## Voorbeeld run
 
 ```bash
-$ export MYSQL_PASS="LetmeIn!"
+$ export MYSQL_PASS="<redacted>"
 $ az group list
 [
   {
@@ -196,7 +196,7 @@ $ az group list
   }
 ]
 $ make all
-terraform -chdir=provisioning apply -var="admin_public_key=$(cat ~/.ssh/id_ed25519_hogent.pub)" -var="mysql_admin_password=LetmeIn!" -auto-approve
+terraform -chdir=provisioning apply -var="admin_public_key=$(cat ~/.ssh/id_ed25519_hogent.pub)" -var="mysql_admin_password=<redacted>" -auto-approve
 
 Terraform used the selected providers to generate the following execution plan. Resource actions are indicated with the following symbols:
   + create
@@ -551,7 +551,7 @@ cd configuration_management && uv run ansible-playbook playbooks/site.yml \
         -e "ansible_host=20.188.61.11" \
         -e "tf_mysql_fqdn=jr-wordpressdb.mysql.database.azure.com" \
         -e "tf_mysql_admin_login=wordpressdb" \
-        -e "db_admin_password=LetmeIn!"
+        -e "db_admin_password=<redacted>"
 
 PLAY [Volledige WordPress stack] *******************************************************************************************************************************************************************
 
