@@ -27,6 +27,10 @@
 
     skip_common: false
 
+    # Certbot staging modus (hogere rate limits voor testen)
+    # Zet op false voor een geldig productie-certificaat
+    certbot_staging: true
+
   roles:
     - role: common
       when: not skip_common

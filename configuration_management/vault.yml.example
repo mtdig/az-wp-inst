@@ -1,0 +1,10 @@
+# Kopieer dit bestand naar vault.yml en vul de waarden in:
+#   cp vault.yml.example vault.yml
+#
+# vault.yml staat in .gitignore en wordt NIET meegecommit.
+# Optioneel versleutelen met: ansible-vault encrypt vault.yml
+
+db_admin_password: WIJZIG_MIJ       # Azure MySQL server admin wachtwoord (wordpressdb@jr-wordpressdb)
+db_wp_password: WIJZIG_MIJ          # WordPress applicatie DB gebruiker wachtwoord
+wp_admin_password: WIJZIG_MIJ       # WordPress admin paneel wachtwoord
+ansible_become_password: osboxes.org
