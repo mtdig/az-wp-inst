@@ -11,6 +11,7 @@ SHELL           := bash
 # ---------------------------------------------------------------------------
 TF_DIR   := provisioning
 ANSIBLE_DIR := configuration_management
+USER_VARS_FILE := ../user_vars.tfvars.json
 
 # ---------------------------------------------------------------------------
 # SSH sleutel voor zowel Terraform als Ansible
@@ -29,7 +30,7 @@ MYSQL_PASS ?= $(TF_VAR_mysql_admin_password)
 # Terraform helpers
 # ---------------------------------------------------------------------------
 TF       := terraform -chdir=$(TF_DIR)
-TF_FLAGS := -var="admin_public_key=$$(cat $(SSH_PUB_KEY))"
+TF_FLAGS := -var-file="$(USER_VARS_FILE)" -var="admin_public_key=$$(cat $(SSH_PUB_KEY))"
 
 ifdef MYSQL_PASS
   TF_FLAGS += -var="mysql_admin_password=$(MYSQL_PASS)"

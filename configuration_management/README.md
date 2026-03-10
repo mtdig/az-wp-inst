@@ -143,35 +143,20 @@ all:
       ansible_python_interpreter: /usr/bin/python3
 ```
 
-### Vault (wachtwoorden)
+### Gecentraliseerde variabelen
 
-Maak een `vault.yml` bestand aan in de root van het project:
+Alle user-specifieke variabelen (ook secrets) staan in één rootbestand:
 
-```yaml
----
-db_admin_password: jouw_azure_mysql_admin_wachtwoord  # server admin (wordpressdb)
-db_wp_password: "jouw_wordpress_database_wachtwoord"
-wp_admin_password: "jouw_wordpress_admin_wachtwoord"
-ansible_become_password: jouw_sudo_pw
+- `../user_vars.tfvars.json` (lokaal, in `.gitignore`)
+- `../user_vars.tfvars.json.example` (template)
+
+Maak het lokale bestand aan met:
+
+```bash
+cp ../user_vars.tfvars.json.example ../user_vars.tfvars.json
 ```
 
-> **Let op:** Dit bestand staat in `.gitignore` en moet op elke machine handmatig aangemaakt worden.
-
-### Playbook variabelen
-
-Pas indien nodig de variabelen aan in `playbooks/site.yml`:
-
-```yaml
-vars:
-  wp_domain: sel-opdracht4.groep99.be
-  wp_path: /var/www/wordpress
-  wp_db_host: jr-wordpressdb.mysql.database.azure.com
-  wp_db_name: wordpress
-  wp_db_user: wpuser
-  wp_db_admin_user: wordpressdb
-  wp_db_port: 3306
-  wp_db_ssl: true
-```
+Pas daarna je waarden aan (subscription, domein, wachtwoorden, e-mail, ...).
 
 ## Uitvoeren
 
@@ -198,7 +183,7 @@ uv run ansible-playbook playbooks/site.yml -v
 .
 ├── ansible.cfg          # Ansible configuratie
 ├── inventory.yml        # Host definities
-├── vault.yml            # Wachtwoorden (niet in git)
+├── ../user_vars.tfvars.json  # Gecentraliseerde user variabelen (root, niet in git)
 ├── playbooks/
 │   └── site.yml         # Hoofdplaybook
 └── roles/

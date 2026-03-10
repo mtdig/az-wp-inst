@@ -1,0 +1,28 @@
+{
+  "subscription_id": "your_id",
+  "public_ip_dns_label": "sel-opdracht4-groep99",
+
+  "db_admin_password": "yourpass",
+  "db_wp_password": "yourpass",
+  "wp_admin_password": "yourpass",
+  "ansible_become_password": "yourpass",
+
+  "wp_domain": "sel-opdracht4.groep99.be",
+  "wp_path": "/var/www/wordpress",
+  "wp_db_host": "your_db_hostname",
+  "wp_db_name": "wordpress",
+  "wp_db_user": "wpuser",
+  "wp_db_admin_user": "wordpressdb",
+  "wp_db_port": 3306,
+  "wp_db_ssl": true,
+
+  "wp_admin_user": "osboxes",
+  "wp_admin_email": "your@email.address",
+  "wp_title": "SELab Opdracht 4 - Groep 99",
+  "wp_locale": "nl_BE",
+  "skip_common": false,
+  "certbot_staging": true,
+
+  "ssh_host_alias": "azosboxes",
+  "ssh_key": "~/.ssh/id_ed25519_hogent"
+}
