@@ -2,5 +2,7 @@
   "subscription_id": "725a7bc1-52e3-4084-be64-511580d664c1",
   "resource_group_name": "SELab-Wordpress",
   "public_ip_dns_label": "sel-opdracht4-groep99",
+  "mysql_server_name": "jr-wordpressdb",
+  "mysql_admin_login": "wordpressdb",
   "mysql_admin_password": "WIJZIG_MIJ"
 }

@@ -41,6 +41,8 @@ type TerraformVars struct {
 	SubscriptionID     string `json:"subscription_id"`
 	ResourceGroupName  string `json:"resource_group_name"`
 	PublicIPDNSLabel   string `json:"public_ip_dns_label"`
+	MysqlServerName    string `json:"mysql_server_name"`
+	MysqlAdminLogin    string `json:"mysql_admin_login"`
 	MysqlAdminPassword string `json:"mysql_admin_password"`
 }
 
@@ -558,6 +560,12 @@ func main() {
 	if tf.ResourceGroupName == "" {
 		tf.ResourceGroupName = "SELab-Wordpress"
 	}
+	if tf.MysqlServerName == "" {
+		tf.MysqlServerName = "jr-wordpressdb"
+	}
+	if tf.MysqlAdminLogin == "" {
+		tf.MysqlAdminLogin = "wordpressdb"
+	}
 
 	dbPortStr := strconv.Itoa(ans.WpDBPort)
 	confirmSave := true
@@ -585,6 +593,14 @@ func main() {
 				Title("DNS Label").
 				Description("Publiek IP DNS label → <label>.francecentral.cloudapp.azure.com").
 				Value(&tf.PublicIPDNSLabel),
+			huh.NewInput().
+				Title("MySQL Server Naam").
+				Description("Naam van de Azure MySQL Flexible Server").
+				Value(&tf.MysqlServerName),
+			huh.NewInput().
+				Title("MySQL Admin Login").
+				Description("Administrator gebruikersnaam voor MySQL").
+				Value(&tf.MysqlAdminLogin),
 			huh.NewInput().
 				Title("MySQL Admin Wachtwoord").
 				Description("Azure MySQL server admin (min. 8 tekens, hoofdletter, cijfer, speciaal)").
