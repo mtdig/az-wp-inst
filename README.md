@@ -31,13 +31,15 @@ Op **NixOS** kan je de dev shell opstarten met `nix develop`.
 # 1. Log in bij Azure, opent browser voor login
 az login
 
-# 2. Maak je user vars bestand op root niveau
-cp user_vars.tfvars.json.example user_vars.tfvars.json
+# 2. Maak je configuratiebestanden aan
+cp terraform.tfvars.json.example terraform.tfvars.json
+cp ansible_vars.json.example ansible_vars.json
 
-# 3. Vul minstens subscription_id en public_ip_dns_label in
+# 3. Vul minstens subscription_id, public_ip_dns_label en mysql_admin_password in
+#    Of gebruik de TUI config generator:
+cd config-starter && make run
 
 # 4. Deploy alles
-export MYSQL_PASS="yourpass"
 make init
 make all
 ```
@@ -63,30 +65,30 @@ Voer `make` of `make help` uit om alle targets te zien:
 
 ### Variabelen en secrets
 
-Alle user-specifieke variabelen staan nu op één plek: `user_vars.tfvars.json` in de projectroot.
+De configuratie is opgesplitst in twee bestanden in de projectroot:
 
-- Voorbeeldbestand: `user_vars.tfvars.json.example`
-- Lokaal bestand: `user_vars.tfvars.json` (staat in `.gitignore`)
+| Bestand | Inhoud |
+|---|---|
+| `terraform.tfvars.json` | Azure subscription, DNS label, MySQL admin wachtwoord |
+| `ansible_vars.json` | WordPress instellingen, wachtwoorden, SSH config |
 
-Het MySQL admin wachtwoord **moet** meegegeven worden. De SSH publieke sleutel wordt automatisch gelezen van `~/.ssh/id_ed25519_hogent.pub`.
+Voorbeeldbestanden: `terraform.tfvars.json.example` en `ansible_vars.json.example` (staan in `.gitignore`).
 
-```bash
-# Optie A – inline override
-make apply MYSQL_PASS="yourpass"
+Het MySQL admin wachtwoord staat in `terraform.tfvars.json` en wordt automatisch doorgegeven aan zowel Terraform als Ansible. De SSH publieke sleutel wordt automatisch gelezen van `~/.ssh/id_ed25519_hogent.pub`.
 
-# Optie B – omgevingsvariabele
-export MYSQL_PASS="yourpass"
-make all
+> **Tip:** Gebruik de interactieve TUI config generator om beide bestanden aan te maken:
+> ```bash
+> cd config-starter && make run
+> ```
 
-# Optie C – Terraform omgevingsvariabele (werkt ook)
-export TF_VAR_mysql_admin_password="yourpass"
-make all
-```
+Compileer zelf (golang - fast&easy cross compilation) of haal de laatste binary [hier (github)](https://github.com/mtdig/az-wp-inst/releases/latest).
+
+![config generator](img/config-generator.png)
 
 ### SSH sleutel aanpassen
 
 ```bash
-make apply SSH_KEY=~/.ssh/mijn_andere_sleutel MYSQL_PASS="..."
+make apply SSH_KEY=~/.ssh/mijn_andere_sleutel
 ```
 
 ## Hoe werkt het
@@ -110,9 +112,16 @@ Terraform outputs worden bij configure-time gelezen en via `-e` extra vars en dy
 ```
 opdracht4/
 ├── Makefile                     # Orkestreeert alles
+├── terraform.tfvars.json        # Azure & MySQL configuratie
+├── ansible_vars.json            # Ansible/WordPress configuratie
 ├── .gitignore
 ├── flake.nix                    # NixOS dev shell
 ├── pyproject.toml / uv.lock    # Python/Ansible dependencies
+│
+├── config-starter/              # TUI configuratie generator (Go)
+│   ├── main.go
+│   ├── Makefile
+│   └── version.txt
 │
 ├── provisioning/                # Terraform root
 │   ├── main.tf
@@ -174,13 +183,12 @@ ssh azosboxes
 ssh osboxes@$(cd provisioning && terraform output -raw public_ip_address)
 
 # WordPress openen
-# Open: https://sel-opdracht4.groep99.be
+# Open: https://<dns-label>.francecentral.cloudapp.azure.com
 ```
 
 ## Opruimen
 
 ```bash
-make destroy MYSQL_PASS="yourpass" 
+make destroy
 ```
-_* of een ander complex wachtwoord, dit wordt niet gebruikt, maar de complixiteit ervan wordt wel gecontroleerd_
 
