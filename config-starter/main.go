@@ -39,6 +39,7 @@ var (
 
 type TerraformVars struct {
 	SubscriptionID     string `json:"subscription_id"`
+	ResourceGroupName  string `json:"resource_group_name"`
 	PublicIPDNSLabel   string `json:"public_ip_dns_label"`
 	MysqlAdminPassword string `json:"mysql_admin_password"`
 }
@@ -48,11 +49,11 @@ type AnsibleVars struct {
 	WpAdminPassword       string `json:"wp_admin_password"`
 	AnsibleBecomePassword string `json:"ansible_become_password"`
 
-	WpPath    string `json:"wp_path"`
-	WpDBName  string `json:"wp_db_name"`
-	WpDBUser  string `json:"wp_db_user"`
-	WpDBPort  int    `json:"wp_db_port"`
-	WpDBSSL   bool   `json:"wp_db_ssl"`
+	WpPath   string `json:"wp_path"`
+	WpDBName string `json:"wp_db_name"`
+	WpDBUser string `json:"wp_db_user"`
+	WpDBPort int    `json:"wp_db_port"`
+	WpDBSSL  bool   `json:"wp_db_ssl"`
 
 	WpAdminUser  string `json:"wp_admin_user"`
 	WpAdminEmail string `json:"wp_admin_email"`
@@ -554,6 +555,10 @@ func main() {
 		ans.SSHHostAlias = "azosboxes"
 	}
 
+	if tf.ResourceGroupName == "" {
+		tf.ResourceGroupName = "SELab-Wordpress"
+	}
+
 	dbPortStr := strconv.Itoa(ans.WpDBPort)
 	confirmSave := true
 
@@ -572,6 +577,10 @@ func main() {
 					}
 					return nil
 				}),
+			huh.NewInput().
+				Title("Resource Group").
+				Description("Naam van de Azure resourcegroep").
+				Value(&tf.ResourceGroupName),
 			huh.NewInput().
 				Title("DNS Label").
 				Description("Publiek IP DNS label → <label>.francecentral.cloudapp.azure.com").

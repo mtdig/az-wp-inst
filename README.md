@@ -2,8 +2,6 @@
 
 Volledig geautomatiseerde deployment van een WordPress stack op Azure met **Terraform** voor provisioning en **Ansible** voor configuratiebeheer.  We gebruiken **Makefile** om deze uit te voeren.
 
-> TODO: verplaats hardcoded values uit ansible playbook/TF config naar top level vars / env vars (email in site.yaml ...)
-
 
 ## Wat wordt er aangemaakt
 
@@ -191,4 +189,12 @@ ssh osboxes@$(cd provisioning && terraform output -raw public_ip_address)
 ```bash
 make destroy
 ```
+
+## Mogelijke uitbreidingen
+
+- [ ] **Multi-environment support** — Meerdere deployments (dev/prod/per-lid) vanuit dezelfde codebase:
+  - `envs/` map met aparte var-files per omgeving (`test2.tfvars.json`, `dev.tfvars.json`, `prod.tfvars.json`, …)
+  - Terraform workspaces of remote backend met dynamische state key
+  - `make all ENV=dev` / `make all ENV=prod`
+  - Environment-selector in de TUI config generator
 
