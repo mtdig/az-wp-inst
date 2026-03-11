@@ -1,3 +1,14 @@
+/* TODO:
+- validatie verbeteren (wachtwoord regels, verplichte velden)
+- error handling bij file opslaan
+- meer hints/feedback tijdens het invullen (bv. groen vinkje bij valid veld)
+- voorbeeldwaarden in de velden (placeholder)
+- optie om terug te gaan en aanpassingen te maken na bevestiging
+- betere scheiding tussen form logica en UI (MVVM patroon)
+- extra tabblad met overzicht van alle instellingen voor bevestiging
+- mogelijkheid om alleen Terraform of Ansible bestanden te genereren
+*/
+
 package main
 
 import (
@@ -14,7 +25,7 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
-// Versie – wordt overschreven via ldflags bij build
+// wordt overschreven via ldflags bij build
 var version = "v1.0.0"
 
 // min terminal size
@@ -23,7 +34,7 @@ const (
 	minHeight = 30
 )
 
-// mainframe stle
+// mainframe style
 var (
 	green    = lipgloss.Color("#00FF41")
 	amber    = lipgloss.Color("#FFB000")
@@ -554,14 +565,14 @@ func main() {
 		ans.SSHKey = "~/.ssh/id_ed25519_hogent"
 	}
 	if ans.SSHHostAlias == "" {
-		ans.SSHHostAlias = "azosboxes"
+		ans.SSHHostAlias = "<jouw-initialen>-wordpressapp"
 	}
 
 	if tf.ResourceGroupName == "" {
 		tf.ResourceGroupName = "SELab-Wordpress"
 	}
 	if tf.MysqlServerName == "" {
-		tf.MysqlServerName = "jr-wordpressdb"
+		tf.MysqlServerName = "<jouw-initialen>-wordpressdb"
 	}
 	if tf.MysqlAdminLogin == "" {
 		tf.MysqlAdminLogin = "wordpressdb"
