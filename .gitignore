@@ -30,3 +30,4 @@ vault.yml
 # Go binaries
 config-starter/config-starter
 config-starter/bin/
+config-backup/
