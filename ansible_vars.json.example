@@ -4,10 +4,8 @@
   "ansible_become_password": "osboxes.org",
 
   "wp_path": "/var/www/wordpress",
-  "wp_db_host": "jr-wordpressdb.mysql.database.azure.com",
   "wp_db_name": "wordpress",
   "wp_db_user": "wpuser",
-  "wp_db_admin_user": "wordpressdb",
   "wp_db_port": 3306,
   "wp_db_ssl": true,
 

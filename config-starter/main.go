@@ -49,10 +49,8 @@ type AnsibleVars struct {
 	AnsibleBecomePassword string `json:"ansible_become_password"`
 
 	WpPath    string `json:"wp_path"`
-	WpDBHost  string `json:"wp_db_host"`
 	WpDBName  string `json:"wp_db_name"`
 	WpDBUser  string `json:"wp_db_user"`
-	WpDBAdmin string `json:"wp_db_admin_user"`
 	WpDBPort  int    `json:"wp_db_port"`
 	WpDBSSL   bool   `json:"wp_db_ssl"`
 
@@ -637,20 +635,13 @@ func main() {
 		huh.NewGroup(
 			huh.NewNote().
 				Title("█ DATABASE").
-				Description("Azure MySQL Flexible Server verbinding."),
-			huh.NewInput().
-				Title("MySQL Host").
-				Description("FQDN van de MySQL server").
-				Value(&ans.WpDBHost),
+				Description("Azure MySQL Flexible Server verbinding.\nHost en admin gebruiker worden automatisch ingesteld via Terraform."),
 			huh.NewInput().
 				Title("Database Naam").
 				Value(&ans.WpDBName),
 			huh.NewInput().
 				Title("WordPress DB Gebruiker").
 				Value(&ans.WpDBUser),
-			huh.NewInput().
-				Title("DB Admin Gebruiker").
-				Value(&ans.WpDBAdmin),
 			huh.NewInput().
 				Title("Poort").
 				Value(&dbPortStr).
