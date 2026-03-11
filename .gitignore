@@ -15,7 +15,8 @@ terraform.rc
 # Gevoelige variabelebestanden
 *.auto.tfvars
 secret.tfvars
-user_vars.tfvars.json
+terraform.tfvars.json
+ansible_vars.json
 
 
 .venv/
@@ -25,3 +26,7 @@ user_vars.tfvars.json
 logs/
 
 vault.yml
+
+# Go binaries
+config-starter/config-starter
+config-starter/bin/

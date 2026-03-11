@@ -1,6 +1,11 @@
 # =============================================================================
 #  Opdracht 4 – Makefile
 #  Runnning Terraform (provisioning) en Ansible (configuration_management)
+#
+#  Auteur: Jeroen Van Renterghem
+#  E-mail: jeroen.vanrenterghem@student.hogent.be
+#  Datum:  2026-03-11
+#  Repo:   https://github.com/mtdig/az-wp-inst
 # =============================================================================
 
 SHELL           := bash
@@ -11,7 +16,8 @@ SHELL           := bash
 # ---------------------------------------------------------------------------
 TF_DIR   := provisioning
 ANSIBLE_DIR := configuration_management
-USER_VARS_FILE := ../user_vars.tfvars.json
+TF_VARS_FILE := ../terraform.tfvars.json
+ANSIBLE_VARS_FILE := ../ansible_vars.json
 
 # ---------------------------------------------------------------------------
 # SSH sleutel voor zowel Terraform als Ansible
@@ -20,21 +26,10 @@ SSH_KEY     ?= ~/.ssh/id_ed25519_hogent
 SSH_PUB_KEY ?= $(SSH_KEY).pub
 
 # ---------------------------------------------------------------------------
-# Secrets – geef mee via command of export als omgevingsvariabelen
-#   make apply MYSQL_PASS=...
-#   export MYSQL_PASS=... && make all
-# ---------------------------------------------------------------------------
-MYSQL_PASS ?= $(TF_VAR_mysql_admin_password)
-
-# ---------------------------------------------------------------------------
 # Terraform helpers
 # ---------------------------------------------------------------------------
 TF       := terraform -chdir=$(TF_DIR)
-TF_FLAGS := -var-file="$(USER_VARS_FILE)" -var="admin_public_key=$$(cat $(SSH_PUB_KEY))"
-
-ifdef MYSQL_PASS
-  TF_FLAGS += -var="mysql_admin_password=$(MYSQL_PASS)"
-endif
+TF_FLAGS := -var-file="$(TF_VARS_FILE)" -var="admin_public_key=$$(cat $(SSH_PUB_KEY))"
 
 # ---------------------------------------------------------------------------
 # Lees Terraform outputs in als Make variabelen
@@ -73,9 +68,11 @@ configure: ## Ansible playbook uitvoeren met Terraform outputs
 	$(eval ADMIN_USER     := $(call tf_output,admin_username))
 	$(eval MYSQL_FQDN     := $(call tf_output,mysql_fqdn))
 	$(eval MYSQL_ADMIN     := $(call tf_output,mysql_admin_login))
+	$(eval PUBLIC_FQDN    := $(call tf_output,public_fqdn))
 	@echo "──────────────────────────────────────────────"
 	@echo "  VM IP         : $(VM_IP)"
 	@echo "  Admin user    : $(ADMIN_USER)"
+	@echo "  Public FQDN   : $(PUBLIC_FQDN)"
 	@echo "  MySQL FQDN    : $(MYSQL_FQDN)"
 	@echo "  MySQL admin   : $(MYSQL_ADMIN)"
 	@echo "──────────────────────────────────────────────"
@@ -83,10 +80,12 @@ configure: ## Ansible playbook uitvoeren met Terraform outputs
 		-i "$(VM_IP)," \
 		-u "$(ADMIN_USER)" \
 		--private-key $(SSH_KEY) \
+		-e @$(ANSIBLE_VARS_FILE) \
 		-e "ansible_host=$(VM_IP)" \
+		-e "tf_public_fqdn=$(PUBLIC_FQDN)" \
 		-e "tf_mysql_fqdn=$(MYSQL_FQDN)" \
 		-e "tf_mysql_admin_login=$(MYSQL_ADMIN)" \
-		$(if $(MYSQL_PASS),-e "db_admin_password=$(MYSQL_PASS)")
+		-e "db_admin_password=$$(jq -r .mysql_admin_password $(TF_VARS_FILE))"
 
 # ---------------------------------------------------------------------------
 # Gecombineerde targets
@@ -97,10 +96,10 @@ all: apply configure
 # cleanup
 # ---------------------------------------------------------------------------
 destroy: ## Alle Azure resources verwijderen
-	$(TF) destroy $(TF_FLAGS) -var="mysql_admin_password=Destroy-1!" -auto-approve
+	$(TF) destroy $(TF_FLAGS) -auto-approve
 
 destroy-vm: ## Enkel de VM en dependencies verwijderen (netwerk, compute)
-	$(TF) destroy $(TF_FLAGS) -var="mysql_admin_password=Destroy-1!" -auto-approve \
+	$(TF) destroy $(TF_FLAGS) -auto-approve \
 		-target=module.compute \
 		-target=module.network
 

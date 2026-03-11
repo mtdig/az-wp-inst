@@ -3,9 +3,12 @@
   hosts: all
   become: true
   gather_subset: min
-  vars_files:
-    - ../../user_vars.tfvars.json
   pre_tasks:
+    - name: Overschrijf wp_domain met Azure publieke FQDN vanuit Terraform
+      set_fact:
+        wp_domain: "{{ tf_public_fqdn }}"
+      when: tf_public_fqdn is defined and tf_public_fqdn | length > 0
+
     - name: Overschrijf DB host met Terraform output indien aanwezig
       set_fact:
         wp_db_host: "{{ tf_mysql_fqdn }}"
@@ -15,9 +18,6 @@
       set_fact:
         wp_db_admin_user: "{{ tf_mysql_admin_login }}"
       when: tf_mysql_admin_login is defined
-  vars:
-    # Waarden komen uit ../../user_vars.tfvars.json
-    # Terraform outputs kunnen wp_db_host en wp_db_admin_user overschrijven.
 
   roles:
     - role: common
@@ -40,8 +40,6 @@
   hosts: localhost
   connection: local
   gather_facts: false
-  vars_files:
-    - ../../user_vars.tfvars.json
   vars:
     ssh_config_path: "{{ lookup('env', 'HOME') }}/.ssh/config"
   tasks:

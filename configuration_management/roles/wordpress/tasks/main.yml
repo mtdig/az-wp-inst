@@ -12,6 +12,8 @@
       - libapache2-mod-php
       - certbot
       - python3-certbot-apache
+      - dnsutils
+      - curl
     state: present
     update_cache: true
 
@@ -66,6 +68,14 @@
 
 - name: Handlers nu uitvoeren (Apache moet draaien voor certbot)
   meta: flush_handlers
+
+- name: Wacht tot DNS voor {{ wp_domain }} resolveerbaar is
+  command: dig +short {{ wp_domain }}
+  register: dns_check
+  until: dns_check.stdout | trim | length > 0
+  retries: 15
+  delay: 10
+  changed_when: false
 
 - name: Let's Encrypt certificaat aanvragen via certbot
   command:

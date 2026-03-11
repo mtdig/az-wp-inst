@@ -1,0 +1,23 @@
+{
+  "db_wp_password": "LetmeIn!",
+  "wp_admin_password": "LetmeIn!@osboxes.org",
+  "ansible_become_password": "osboxes.org",
+
+  "wp_path": "/var/www/wordpress",
+  "wp_db_host": "jr-wordpressdb.mysql.database.azure.com",
+  "wp_db_name": "wordpress",
+  "wp_db_user": "wpuser",
+  "wp_db_admin_user": "wordpressdb",
+  "wp_db_port": 3306,
+  "wp_db_ssl": true,
+
+  "wp_admin_user": "osboxes",
+  "wp_admin_email": "jeroen.vanrenterghem@student.hogent.be",
+  "wp_title": "SELab Opdracht 4 - Groep 99",
+  "wp_locale": "nl_BE",
+  "skip_common": false,
+  "certbot_staging": true,
+
+  "ssh_host_alias": "azosboxes",
+  "ssh_key": "~/.ssh/id_ed25519_hogent"
+}
