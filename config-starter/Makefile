@@ -9,8 +9,10 @@
 
 SHELL     := bash
 APP       := config-starter
+VERSION   := $(shell cat version.txt)
 BINDIR    := bin
-GOFLAGS   := -trimpath -ldflags="-s -w"
+LDFLAGS   := -s -w -X main.version=$(VERSION)
+GOFLAGS   := -trimpath -ldflags="$(LDFLAGS)"
 
 .DEFAULT_GOAL := run
 
@@ -31,21 +33,21 @@ build: ## Compileer voor huidige architectuur → bin/
 	@mkdir -p $(BINDIR)
 	go build $(GOFLAGS) -o $(BINDIR)/$(APP) .
 
-all: $(BINDIR)/$(APP)-linux-amd64 $(BINDIR)/$(APP)-linux-arm64 $(BINDIR)/$(APP)-darwin-arm64 $(BINDIR)/$(APP)-windows-amd64.exe ## Cross-compileer voor alle platformen
+all: $(BINDIR)/$(APP)-$(VERSION)-linux-amd64 $(BINDIR)/$(APP)-$(VERSION)-linux-arm64 $(BINDIR)/$(APP)-$(VERSION)-darwin-arm64 $(BINDIR)/$(APP)-$(VERSION)-windows-amd64.exe ## Cross-compileer voor alle platformen
 
-$(BINDIR)/$(APP)-linux-amd64: ## Linux x86_64
+$(BINDIR)/$(APP)-$(VERSION)-linux-amd64: ## Linux x86_64
 	@mkdir -p $(BINDIR)
 	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build $(GOFLAGS) -o $@ .
 
-$(BINDIR)/$(APP)-linux-arm64: ## Linux aarch64
+$(BINDIR)/$(APP)-$(VERSION)-linux-arm64: ## Linux aarch64
 	@mkdir -p $(BINDIR)
 	CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build $(GOFLAGS) -o $@ .
 
-$(BINDIR)/$(APP)-darwin-arm64: ## macOS arm64
+$(BINDIR)/$(APP)-$(VERSION)-darwin-arm64: ## macOS arm64
 	@mkdir -p $(BINDIR)
 	CGO_ENABLED=0 GOOS=darwin GOARCH=arm64 go build $(GOFLAGS) -o $@ .
 
-$(BINDIR)/$(APP)-windows-amd64.exe: ## Windows x86_64
+$(BINDIR)/$(APP)-$(VERSION)-windows-amd64.exe: ## Windows x86_64
 	@mkdir -p $(BINDIR)
 	CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build $(GOFLAGS) -o $@ .
 

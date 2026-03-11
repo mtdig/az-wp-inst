@@ -14,6 +14,9 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
+// Versie – wordt overschreven via ldflags bij build
+var version = "v1.0.0"
+
 // min terminal size
 const (
 	minWidth  = 80
@@ -115,7 +118,7 @@ func asciiLogo() string {
 }
 
 func subtitle() string {
-	return "C O N F I G U R A T I E   G E N E R A T O R\n           Groep 99  ─  SELab Opdracht 4"
+	return fmt.Sprintf("C O N F I G U R A T I E   G E N E R A T O R   %s\n           Groep 99  ─  SELab Opdracht 4", version)
 }
 
 // huh theme
@@ -341,24 +344,27 @@ func (m model) renderSep(innerW int) string {
 		Render(strings.Repeat("─", innerW))
 }
 
-// onderrand met een hint-tekst in het midden
-func buildBottomBorder(width int, hint string) string {
+// onderrand met versie links en hint-tekst in het midden
+func buildBottomBorder(width int, left string, hint string) string {
 	db := lipgloss.DoubleBorder()
 	borderStyle := lipgloss.NewStyle().Foreground(borderCl)
 
+	leftWidth := lipgloss.Width(left)
 	hintWidth := lipgloss.Width(hint)
-	totalBorderChars := width - hintWidth
+	usedWidth := leftWidth + hintWidth
+	totalBorderChars := width - usedWidth
 	if totalBorderChars < 2 {
-		// wanner te weinig space => toon enkel de rand
 		return borderStyle.Render(db.BottomLeft + strings.Repeat(db.Bottom, width) + db.BottomRight)
 	}
 
-	left := totalBorderChars / 2
-	right := totalBorderChars - left
+	gapLeft := totalBorderChars / 2
+	gapRight := totalBorderChars - gapLeft
 
-	return borderStyle.Render(db.BottomLeft+strings.Repeat(db.Bottom, left)) +
+	return borderStyle.Render(db.BottomLeft) +
+		left +
+		borderStyle.Render(strings.Repeat(db.Bottom, gapLeft)) +
 		hint +
-		borderStyle.Render(strings.Repeat(db.Bottom, right)+db.BottomRight)
+		borderStyle.Render(strings.Repeat(db.Bottom, gapRight)+db.BottomRight)
 }
 
 // bepaalt de actieve groep-index adhv de form-output
@@ -454,7 +460,11 @@ func (m model) viewForm() string {
 		Bold(true).
 		Render(" tab/enter ▸ volgende  │  shift+tab ◂ vorige  │  ctrl+c ✕ stop ")
 
-	bottomBorder := buildBottomBorder(w-2, hint)
+	versionLabel := lipgloss.NewStyle().
+		Foreground(dim).
+		Render(" " + version + " ")
+
+	bottomBorder := buildBottomBorder(w-2, versionLabel, hint)
 
 	return frame.Render(content) + "\n" + bottomBorder
 }
@@ -499,7 +509,11 @@ func (m model) viewDone() string {
 		Bold(true).
 		Render(" q / esc ✕ sluiten ")
 
-	bottomBorder := buildBottomBorder(w-2, hint)
+	versionLabel := lipgloss.NewStyle().
+		Foreground(dim).
+		Render(" " + version + " ")
+
+	bottomBorder := buildBottomBorder(w-2, versionLabel, hint)
 
 	return frame.Render(content) + "\n" + bottomBorder
 }
@@ -507,6 +521,11 @@ func (m model) viewDone() string {
 // MAIN garbage
 
 func main() {
+	if len(os.Args) > 1 && (os.Args[1] == "--version" || os.Args[1] == "-v") {
+		fmt.Printf("config-starter %s\n", version)
+		os.Exit(0)
+	}
+
 	root := findRoot()
 
 	tfPath := filepath.Join(root, "terraform.tfvars.json")
