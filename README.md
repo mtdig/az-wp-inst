@@ -4,17 +4,21 @@ Volledig geautomatiseerde deployment van een WordPress stack op Azure met **Terr
 
 ## Inhoudsopgave
 
-- [Wat wordt er aangemaakt](#wat-wordt-er-aangemaakt)
-- [Vereisten](#vereisten)
-- [Snel aan de slag](#snel-aan-de-slag)
-- [Make targets](#make-targets)
-- [Hoe werkt het](#hoe-werkt-het)
-- [Projectstructuur](#projectstructuur)
-- [Optionele componenten](#optionele-componenten)
-- [Beveiliging](#beveiliging)
-- [Na deployment](#na-deployment)
-- [Opruimen](#opruimen)
-- [Mogelijke uitbreidingen](#mogelijke-uitbreidingen)
+- [Opdracht 4 – WordPress op Azure](#opdracht-4--wordpress-op-azure)
+  - [Inhoudsopgave](#inhoudsopgave)
+  - [Wat wordt er aangemaakt](#wat-wordt-er-aangemaakt)
+  - [Vereisten](#vereisten)
+  - [Snel aan de slag](#snel-aan-de-slag)
+  - [Make targets](#make-targets)
+    - [Variabelen en secrets](#variabelen-en-secrets)
+    - [SSH sleutel aanpassen](#ssh-sleutel-aanpassen)
+  - [Hoe werkt het](#hoe-werkt-het)
+  - [Projectstructuur](#projectstructuur)
+  - [Optionele componenten](#optionele-componenten)
+  - [Beveiliging](#beveiliging)
+  - [Na deployment](#na-deployment)
+  - [Opruimen](#opruimen)
+  - [Mogelijke uitbreidingen](#mogelijke-uitbreidingen)
 
 ## Wat wordt er aangemaakt
 
@@ -24,8 +28,6 @@ Volledig geautomatiseerde deployment van een WordPress stack op Azure met **Terr
 | **Configuratie** | Ansible | SSH hardening, UFW, fail2ban, Apache + PHP, WordPress, WP-CLI, remote MySQL database & gebruiker via SSL |
 
 ## Vereisten
-
-Zie [hier voor installatie instructies](./PREREQUISITES.md) voor verschillende platformen.
 
 | Vereiste | Opmerkingen |
 |---|---|
