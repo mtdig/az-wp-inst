@@ -43,7 +43,7 @@ var (
 	borderCl = lipgloss.Color("#00CC00")
 	redCl    = lipgloss.Color("#FF0000")
 
-	tabNames = []string{"AZURE", "WACHTWOORDEN", "WORDPRESS", "DATABASE", "SSH & OPTIES"}
+	tabNames = []string{"AZURE", "WACHTWOORDEN", "WORDPRESS", "DATABASE", "COMPONENTEN", "SSH & OPTIES"}
 )
 
 // vars
@@ -74,6 +74,9 @@ type AnsibleVars struct {
 	WpLocale     string `json:"wp_locale"`
 	SkipCommon   bool   `json:"skip_common"`
 	CertbotStg   bool   `json:"certbot_staging"`
+
+	EnableUptimeKuma bool `json:"enable_uptime_kuma"`
+	EnableTechSnake  bool `json:"enable_tech_snake"`
 
 	SSHHostAlias string `json:"ssh_host_alias"`
 	SSHKey       string `json:"ssh_key"`
@@ -388,6 +391,7 @@ func (m model) currentGroup() int {
 		"WACHTWOORDEN",
 		"WORDPRESS",
 		"DATABASE",
+		"OPTIONELE COMPONENTEN",
 		"SSH & OPTIES",
 	}
 	for i, mk := range markers {
@@ -692,6 +696,20 @@ func main() {
 				Title("SSL Verbinding").
 				Description("MySQL SSL inschakelen?").
 				Value(&ans.WpDBSSL),
+		),
+
+		huh.NewGroup(
+			huh.NewNote().
+				Title("█ OPTIONELE COMPONENTEN").
+				Description("extra self-hosted tools die naast WordPress draaien"),
+			huh.NewConfirm().
+				Title("Uptime Kuma").
+				Description("uptime monitoring (docker container /status)").
+				Value(&ans.EnableUptimeKuma),
+			huh.NewConfirm().
+				Title("Tech Snake").
+				Description("snake game (WASM op /snake)").
+				Value(&ans.EnableTechSnake),
 		),
 
 		huh.NewGroup(

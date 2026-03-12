@@ -1,0 +1,11 @@
+
+<Location /status>
+    ProxyPass        http://127.0.0.1:3001/
+    ProxyPassReverse http://127.0.0.1:3001/
+</Location>
+
+# WebSocket ondersteuning (nodig voor realtime updates)
+<Location /status/socket.io>
+    ProxyPass        ws://127.0.0.1:3001/socket.io
+    ProxyPassReverse ws://127.0.0.1:3001/socket.io
+</Location>

@@ -1,0 +1,49 @@
+
+- name: Benodigde pakketten installeren
+  apt:
+    name:
+      - unzip
+    state: present
+
+- name: Tech Snake directory aanmaken
+  file:
+    path: /var/www/tech-snake
+    state: directory
+    owner: www-data
+    group: www-data
+    mode: "0755"
+
+- name: Tech Snake zip downloaden
+  get_url:
+    url: https://github.com/mtdig/tech-snake/releases/download/v1.0.0/snake-web.zip
+    dest: /tmp/snake-web.zip
+    mode: "0644"
+  register: snake_download
+
+- name: Tech Snake uitpakken
+  unarchive:
+    src: /tmp/snake-web.zip
+    dest: /var/www/tech-snake
+    remote_src: true
+    owner: www-data
+    group: www-data
+  when: snake_download.changed
+
+- name: Apache headers module inschakelen
+  apache2_module:
+    name: headers
+    state: present
+  notify: Apache herstarten
+
+- name: Apache configuratie voor Tech Snake
+  template:
+    src: tech-snake.conf.j2
+    dest: /etc/apache2/conf-available/tech-snake.conf
+  notify: Apache herstarten
+
+- name: Tech Snake Apache configuratie inschakelen
+  file:
+    src: /etc/apache2/conf-available/tech-snake.conf
+    dest: /etc/apache2/conf-enabled/tech-snake.conf
+    state: link
+  notify: Apache herstarten
