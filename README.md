@@ -143,7 +143,7 @@ opdracht4/
 │       ├── common/              # SSH, UFW, fail2ban
 │       ├── mysql_client/        # MySQL client, remote DB/gebruiker aanmaak
 │       ├── wordpress/           # Apache, PHP, WordPress, WP-CLI
-│       ├── uptime_kuma/         # Uptime Kuma monitoring (Docker, /status)
+│       ├── vaultwarden/          # Vaultwarden wachtwoordkluis (Docker, /secrets)
 │       └── tech_snake/          # snake game (/snake)
 │
 └── devops/                      # Originele ARM templates (ter referentie)
@@ -157,14 +157,14 @@ Deze componenten zijn standaard uitgeschakeld en kunnen via `ansible_vars.json` 
 
 | component | flag | rpute | beschrijving |
 |---|---|---|---|
-| **Uptime Kuma** | `enable_uptime_kuma` | `/status` | Self-hosted uptime monitoring dashboard (draait als Docker container). Monitort WordPress, MySQL, SSL cert status. |
+| **Vaultwarden** | `enable_vaultwarden` | `/secrets` | Self-hosted wachtwoordkluis (draait als Docker container). Lichtgewicht Bitwarden-compatibele server. |
 | **Tech Snake** | `enable_tech_snake` | `/snake` | Godot WebAssembly snake game. |
 
 Voorbeeld in `ansible_vars.json`:
 
 ```json
 {
-  "enable_uptime_kuma": true,
+  "enable_vaultwarden": true,
   "enable_tech_snake": true
 }
 ```

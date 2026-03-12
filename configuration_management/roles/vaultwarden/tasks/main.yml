@@ -1,5 +1,6 @@
 ---
-- name: Docker afhankelijkheden installeren
+
+- name: Docker dependencies installeren
   apt:
     name:
       - ca-certificates
@@ -43,46 +44,46 @@
     state: started
     enabled: true
 
-- name: Uptime Kuma directories aanmaken
+- name: Vaultwarden directories aanmaken
   file:
     path: "{{ item }}"
     state: directory
     mode: "0755"
   loop:
-    - /opt/uptime-kuma
-    - /opt/uptime-kuma/data
+    - /opt/vaultwarden
+    - /opt/vaultwarden/data
 
 - name: Docker Compose bestand aanmaken
   template:
     src: docker-compose.yml.j2
-    dest: /opt/uptime-kuma/docker-compose.yml
+    dest: /opt/vaultwarden/docker-compose.yml
     mode: "0644"
-  register: kuma_compose
+  register: vw_compose
 
 - name: Systemd service installeren
   template:
-    src: uptime-kuma.service.j2
-    dest: /etc/systemd/system/uptime-kuma.service
+    src: vaultwarden.service.j2
+    dest: /etc/systemd/system/vaultwarden.service
     mode: "0644"
-  register: kuma_service
+  register: vw_service
 
 - name: Systemd herladen
   systemd:
     daemon_reload: true
-  when: kuma_service.changed
+  when: vw_service.changed
 
-- name: Uptime Kuma service inschakelen en starten
+- name: Vaultwarden service inschakelen en starten
   systemd:
-    name: uptime-kuma
-    state: "{{ 'restarted' if kuma_compose.changed else 'started' }}"
+    name: vaultwarden
+    state: "{{ 'restarted' if vw_compose.changed else 'started' }}"
     enabled: true
 
-- name: Wacht tot Uptime Kuma klaar is
+- name: Wacht tot Vaultwarden klaar is
   uri:
-    url: http://127.0.0.1:3001
+    url: http://127.0.0.1:8080/secrets/
     status_code: 200
-  register: kuma_health
-  until: kuma_health.status == 200
+  register: vw_health
+  until: vw_health.status == 200
   retries: 15
   delay: 5
 
@@ -95,17 +96,18 @@
     - proxy_http
     - proxy_wstunnel
     - rewrite
+    - headers
   notify: Apache herstarten
 
-- name: Apache reverse proxy configuratie voor Uptime Kuma
+- name: Apache reverse proxy configuratie voor Vaultwarden
   template:
-    src: uptime-kuma.conf.j2
-    dest: /etc/apache2/conf-available/uptime-kuma.conf
+    src: vaultwarden.conf.j2
+    dest: /etc/apache2/conf-available/vaultwarden.conf
   notify: Apache herstarten
 
-- name: Uptime Kuma Apache configuratie inschakelen
+- name: Vaultwarden Apache configuratie inschakelen
   file:
-    src: /etc/apache2/conf-available/uptime-kuma.conf
-    dest: /etc/apache2/conf-enabled/uptime-kuma.conf
+    src: /etc/apache2/conf-available/vaultwarden.conf
+    dest: /etc/apache2/conf-enabled/vaultwarden.conf
     state: link
   notify: Apache herstarten

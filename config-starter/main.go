@@ -12,6 +12,8 @@
 package main
 
 import (
+	"crypto/rand"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -75,8 +77,9 @@ type AnsibleVars struct {
 	SkipCommon   bool   `json:"skip_common"`
 	CertbotStg   bool   `json:"certbot_staging"`
 
-	EnableUptimeKuma bool `json:"enable_uptime_kuma"`
-	EnableTechSnake  bool `json:"enable_tech_snake"`
+	EnableVaultwarden     bool   `json:"enable_vaultwarden"`
+	VaultwardenAdminToken string `json:"vaultwarden_admin_token,omitempty"`
+	EnableTechSnake       bool   `json:"enable_tech_snake"`
 
 	SSHHostAlias string `json:"ssh_host_alias"`
 	SSHKey       string `json:"ssh_key"`
@@ -571,6 +574,11 @@ func main() {
 	if ans.SSHHostAlias == "" {
 		ans.SSHHostAlias = "<jouw-initialen>-wordpressapp"
 	}
+	if ans.VaultwardenAdminToken == "" {
+		b := make([]byte, 32)
+		_, _ = rand.Read(b)
+		ans.VaultwardenAdminToken = hex.EncodeToString(b)
+	}
 
 	if tf.ResourceGroupName == "" {
 		tf.ResourceGroupName = "SELab-Wordpress"
@@ -703,9 +711,13 @@ func main() {
 				Title("█ OPTIONELE COMPONENTEN").
 				Description("extra self-hosted tools die naast WordPress draaien"),
 			huh.NewConfirm().
-				Title("Uptime Kuma").
-				Description("uptime monitoring (docker container /status)").
-				Value(&ans.EnableUptimeKuma),
+				Title("Vaultwarden").
+				Description("wachtwoordkluis (docker container /secrets)").
+				Value(&ans.EnableVaultwarden),
+			huh.NewInput().
+				Title("Vaultwarden Admin Token").
+				Description("token voor /secrets/admin panel (automatisch gegenereerd, leeg = admin uit)").
+				Value(&ans.VaultwardenAdminToken),
 			huh.NewConfirm().
 				Title("Tech Snake").
 				Description("snake game (WASM op /snake)").

@@ -1,0 +1,13 @@
+ProxyPreserveHost On
+RequestHeader set X-Forwarded-Proto "https"
+
+# WebSocket live sync
+RewriteEngine On
+RewriteCond %{HTTP:Upgrade} =websocket [NC]
+RewriteRule ^/secrets/(.*)  ws://127.0.0.1:8080/secrets/$1 [P,L]
+
+ProxyPass        /secrets/ http://127.0.0.1:8080/secrets/
+ProxyPassReverse /secrets/ http://127.0.0.1:8080/secrets/
+
+# Trailing-slash redirect
+RedirectMatch 301 ^/secrets$ /secrets/

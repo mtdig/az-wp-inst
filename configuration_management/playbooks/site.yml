@@ -24,8 +24,8 @@
       when: not skip_common
     - mysql_client
     - wordpress
-    - role: uptime_kuma
-      when: enable_uptime_kuma | default(false) | bool
+    - role: vaultwarden
+      when: enable_vaultwarden | default(false) | bool
     - role: tech_snake
       when: enable_tech_snake | default(false) | bool
 
@@ -38,7 +38,7 @@
           - "https://{{ wp_domain }}"
           - ""
           - "MySQL: {{ wp_db_host }}:{{ wp_db_port }}"
-          - "{{ 'Uptime Kuma: https://' + wp_domain + '/status' if (enable_uptime_kuma | default(false) | bool) else '' }}"
+          - "{{ 'Vaultwarden: https://' + wp_domain + '/secrets' if (enable_vaultwarden | default(false) | bool) else '' }}"
           - "{{ 'Tech Snake:  https://' + wp_domain + '/snake' if (enable_tech_snake | default(false) | bool) else '' }}"
           - "=========================================="
 

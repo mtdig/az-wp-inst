@@ -15,7 +15,8 @@
   "wp_locale": "nl_BE",
   "skip_common": false,
   "certbot_staging": true,
-  "enable_uptime_kuma": false,
+  "enable_vaultwarden": false,
+  "vaultwarden_admin_token": "",
   "enable_tech_snake": false,
 
   "ssh_host_alias": "azosboxes",
