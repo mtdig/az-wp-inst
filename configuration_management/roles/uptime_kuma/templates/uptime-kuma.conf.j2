@@ -1,11 +1,11 @@
 
-<Location /status>
-    ProxyPass        http://127.0.0.1:3001/
-    ProxyPassReverse http://127.0.0.1:3001/
-</Location>
+# Uptime Kuma reverse proxy – beheerd door Ansible
+# Kuma draait met UPTIME_KUMA_BASE_PATH=/status
+
+ProxyPass        /status  http://127.0.0.1:3001/status
+ProxyPassReverse /status  http://127.0.0.1:3001/status
 
 # WebSocket ondersteuning (nodig voor realtime updates)
-<Location /status/socket.io>
-    ProxyPass        ws://127.0.0.1:3001/socket.io
-    ProxyPassReverse ws://127.0.0.1:3001/socket.io
-</Location>
+RewriteEngine On
+RewriteCond %{HTTP:Upgrade} =websocket [NC]
+RewriteRule /status/(.*)  ws://127.0.0.1:3001/status/$1 [P,L]

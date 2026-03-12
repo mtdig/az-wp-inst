@@ -15,7 +15,7 @@
 
 - name: Tech Snake zip downloaden
   get_url:
-    url: https://github.com/mtdig/tech-snake/releases/download/v1.0.0/snake-web.zip
+    url: https://github.com/mtdig/tech-snake/releases/download/v1.0.1/snake-web.zip
     dest: /tmp/snake-web.zip
     mode: "0644"
   register: snake_download

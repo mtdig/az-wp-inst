@@ -94,6 +94,7 @@
     - proxy
     - proxy_http
     - proxy_wstunnel
+    - rewrite
   notify: Apache herstarten
 
 - name: Apache reverse proxy configuratie voor Uptime Kuma
