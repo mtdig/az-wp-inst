@@ -15,6 +15,9 @@
   "wp_locale": "nl_BE",
   "skip_common": false,
   "certbot_staging": true,
+  "enable_vaultwarden": false,
+  "vaultwarden_admin_token": "",
+  "enable_tech_snake": false,
 
   "ssh_host_alias": "azosboxes",
   "ssh_key": "~/.ssh/id_ed25519_hogent"

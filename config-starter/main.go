@@ -12,6 +12,8 @@
 package main
 
 import (
+	"crypto/rand"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -43,7 +45,7 @@ var (
 	borderCl = lipgloss.Color("#00CC00")
 	redCl    = lipgloss.Color("#FF0000")
 
-	tabNames = []string{"AZURE", "WACHTWOORDEN", "WORDPRESS", "DATABASE", "SSH & OPTIES"}
+	tabNames = []string{"AZURE", "WACHTWOORDEN", "WORDPRESS", "DATABASE", "COMPONENTEN", "SSH & OPTIES"}
 )
 
 // vars
@@ -75,6 +77,10 @@ type AnsibleVars struct {
 	SkipCommon   bool   `json:"skip_common"`
 	CertbotStg   bool   `json:"certbot_staging"`
 
+	EnableVaultwarden     bool   `json:"enable_vaultwarden"`
+	VaultwardenAdminToken string `json:"vaultwarden_admin_token,omitempty"`
+	EnableTechSnake       bool   `json:"enable_tech_snake"`
+
 	SSHHostAlias string `json:"ssh_host_alias"`
 	SSHKey       string `json:"ssh_key"`
 }
@@ -84,7 +90,8 @@ type AnsibleVars struct {
 func findRoot() string {
 	dir, _ := os.Getwd()
 	for {
-		if _, err := os.Stat(filepath.Join(dir, "Makefile")); err == nil {
+		// zoek naar pyproject.toml — uniek voor de projectroot
+		if _, err := os.Stat(filepath.Join(dir, "pyproject.toml")); err == nil {
 			return dir
 		}
 		parent := filepath.Dir(dir)
@@ -388,6 +395,7 @@ func (m model) currentGroup() int {
 		"WACHTWOORDEN",
 		"WORDPRESS",
 		"DATABASE",
+		"OPTIONELE COMPONENTEN",
 		"SSH & OPTIES",
 	}
 	for i, mk := range markers {
@@ -567,6 +575,11 @@ func main() {
 	if ans.SSHHostAlias == "" {
 		ans.SSHHostAlias = "<jouw-initialen>-wordpressapp"
 	}
+	if ans.VaultwardenAdminToken == "" {
+		b := make([]byte, 32)
+		_, _ = rand.Read(b)
+		ans.VaultwardenAdminToken = hex.EncodeToString(b)
+	}
 
 	if tf.ResourceGroupName == "" {
 		tf.ResourceGroupName = "SELab-Wordpress"
@@ -602,7 +615,7 @@ func main() {
 				Value(&tf.ResourceGroupName),
 			huh.NewInput().
 				Title("DNS Label").
-				Description("Publiek IP DNS label → <label>.francecentral.cloudapp.azure.com").
+				Description("Publiek IP DNS label -> <label>.francecentral.cloudapp.azure.com").
 				Value(&tf.PublicIPDNSLabel),
 			huh.NewInput().
 				Title("MySQL Server Naam").
@@ -692,6 +705,24 @@ func main() {
 				Title("SSL Verbinding").
 				Description("MySQL SSL inschakelen?").
 				Value(&ans.WpDBSSL),
+		),
+
+		huh.NewGroup(
+			huh.NewNote().
+				Title("█ OPTIONELE COMPONENTEN").
+				Description("extra self-hosted tools die naast WordPress draaien"),
+			huh.NewConfirm().
+				Title("Vaultwarden").
+				Description("wachtwoordkluis (docker container /secrets)").
+				Value(&ans.EnableVaultwarden),
+			huh.NewInput().
+				Title("Vaultwarden Admin Token").
+				Description("token voor /secrets/admin panel (automatisch gegenereerd, leeg = admin uit)").
+				Value(&ans.VaultwardenAdminToken),
+			huh.NewConfirm().
+				Title("Tech Snake").
+				Description("snake game (WASM op /snake)").
+				Value(&ans.EnableTechSnake),
 		),
 
 		huh.NewGroup(

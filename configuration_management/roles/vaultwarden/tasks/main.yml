@@ -1,0 +1,134 @@
+---
+
+- name: Docker dependencies installeren
+  apt:
+    name:
+      - ca-certificates
+      - curl
+      - gnupg
+    state: present
+    update_cache: true
+
+- name: Docker GPG sleutel toevoegen
+  shell: |
+    install -m 0755 -d /etc/apt/keyrings
+    curl -fsSL https://download.docker.com/linux/ubuntu/gpg \
+      -o /etc/apt/keyrings/docker.asc
+    chmod a+r /etc/apt/keyrings/docker.asc
+  args:
+    creates: /etc/apt/keyrings/docker.asc
+
+- name: Docker repository toevoegen
+  shell: |
+    echo \
+      "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] \
+      https://download.docker.com/linux/ubuntu \
+      $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
+      tee /etc/apt/sources.list.d/docker.list > /dev/null
+  args:
+    creates: /etc/apt/sources.list.d/docker.list
+
+- name: Docker Engine + Compose plugin installeren
+  apt:
+    name:
+      - docker-ce
+      - docker-ce-cli
+      - containerd.io
+      - docker-compose-plugin
+    state: present
+    update_cache: true
+
+- name: Docker service inschakelen
+  service:
+    name: docker
+    state: started
+    enabled: true
+
+- name: Vaultwarden directories aanmaken
+  file:
+    path: "{{ item }}"
+    state: directory
+    mode: "0755"
+  loop:
+    - /opt/vaultwarden
+    - /opt/vaultwarden/data
+
+- name: argon2 CLI installeren
+  apt:
+    name: argon2
+    state: present
+  when: vaultwarden_admin_token | default('') | length > 0
+
+- name: Vaultwarden admin token hashen met Argon2
+  shell: |
+    SALT=$(openssl rand -base64 16)
+    echo -n '{{ vaultwarden_admin_token }}' | argon2 "$SALT" -id -m 16 -t 3 -p 4 -l 32 -e
+  register: vw_hash_result
+  changed_when: false
+  no_log: true
+  when: vaultwarden_admin_token | default('') | length > 0
+
+- name: Gehashte admin token opslaan
+  set_fact:
+    vaultwarden_admin_token_hash: "{{ vw_hash_result.stdout_lines | last }}"
+  when: vaultwarden_admin_token | default('') | length > 0
+  no_log: true
+
+- name: Docker Compose bestand aanmaken
+  template:
+    src: docker-compose.yml.j2
+    dest: /opt/vaultwarden/docker-compose.yml
+    mode: "0644"
+  register: vw_compose
+
+- name: Systemd service installeren
+  template:
+    src: vaultwarden.service.j2
+    dest: /etc/systemd/system/vaultwarden.service
+    mode: "0644"
+  register: vw_service
+
+- name: Systemd herladen
+  systemd:
+    daemon_reload: true
+  when: vw_service.changed
+
+- name: Vaultwarden service inschakelen en starten
+  systemd:
+    name: vaultwarden
+    state: "{{ 'restarted' if vw_compose.changed else 'started' }}"
+    enabled: true
+
+- name: Wacht tot Vaultwarden klaar is
+  uri:
+    url: http://127.0.0.1:8080/secrets/
+    status_code: 200
+  register: vw_health
+  until: vw_health.status == 200
+  retries: 15
+  delay: 5
+
+- name: Apache proxy modules inschakelen
+  apache2_module:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - proxy
+    - proxy_http
+    - proxy_wstunnel
+    - rewrite
+    - headers
+  notify: Apache herstarten
+
+- name: Apache reverse proxy configuratie voor Vaultwarden
+  template:
+    src: vaultwarden.conf.j2
+    dest: /etc/apache2/conf-available/vaultwarden.conf
+  notify: Apache herstarten
+
+- name: Vaultwarden Apache configuratie inschakelen
+  file:
+    src: /etc/apache2/conf-available/vaultwarden.conf
+    dest: /etc/apache2/conf-enabled/vaultwarden.conf
+    state: link
+  notify: Apache herstarten

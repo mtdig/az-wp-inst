@@ -24,6 +24,10 @@
       when: not skip_common
     - mysql_client
     - wordpress
+    - role: vaultwarden
+      when: enable_vaultwarden | default(false) | bool
+    - role: tech_snake
+      when: enable_tech_snake | default(false) | bool
 
   post_tasks:
     - name: Toon verbindingsinformatie
@@ -34,6 +38,10 @@
           - "https://{{ wp_domain }}"
           - ""
           - "MySQL: {{ wp_db_host }}:{{ wp_db_port }}"
+          - "{{ 'Vaultwarden:       https://' + wp_domain + '/secrets' if (enable_vaultwarden | default(false) | bool) else '' }}"
+          - "{{ 'Vaultwarden Admin: https://' + wp_domain + '/secrets/admin' if (enable_vaultwarden | default(false) | bool and vaultwarden_admin_token | default('') | length > 0) else '' }}"
+          - "{{ 'Admin Token:       ' + vaultwarden_admin_token if (enable_vaultwarden | default(false) | bool and vaultwarden_admin_token | default('') | length > 0) else '' }}"
+          - "{{ 'Tech Snake:        https://' + wp_domain + '/snake' if (enable_tech_snake | default(false) | bool) else '' }}"
           - "=========================================="
 
 - name: Lokale SSH config bijwerken

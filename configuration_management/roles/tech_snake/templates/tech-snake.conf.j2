@@ -1,0 +1,14 @@
+
+Alias /snake /var/www/tech-snake
+
+<Directory /var/www/tech-snake>
+    Options -Indexes +FollowSymLinks
+    AllowOverride None
+    Require all granted
+
+    # headers voor wasm SharedArrayBuffer
+    Header always set Cross-Origin-Embedder-Policy "require-corp"
+    Header always set Cross-Origin-Opener-Policy "same-origin"
+
+    AddType application/wasm .wasm
+</Directory>

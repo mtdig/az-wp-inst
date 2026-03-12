@@ -29,7 +29,7 @@ help: ## Toon deze hulptekst
 run: ## Compileer en draai op huidige architectuur
 	go run .
 
-build: ## Compileer voor huidige architectuur → bin/
+build: ## Compileer voor huidige architectuur -> bin/
 	@mkdir -p $(BINDIR)
 	go build $(GOFLAGS) -o $(BINDIR)/$(APP) .
 
