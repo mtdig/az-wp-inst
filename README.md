@@ -2,6 +2,19 @@
 
 Volledig geautomatiseerde deployment van een WordPress stack op Azure met **Terraform** voor provisioning en **Ansible** voor configuratiebeheer.  We gebruiken **Makefile** om deze uit te voeren.
 
+## Inhoudsopgave
+
+- [Wat wordt er aangemaakt](#wat-wordt-er-aangemaakt)
+- [Vereisten](#vereisten)
+- [Snel aan de slag](#snel-aan-de-slag)
+- [Make targets](#make-targets)
+- [Hoe werkt het](#hoe-werkt-het)
+- [Projectstructuur](#projectstructuur)
+- [Optionele componenten](#optionele-componenten)
+- [Beveiliging](#beveiliging)
+- [Na deployment](#na-deployment)
+- [Opruimen](#opruimen)
+- [Mogelijke uitbreidingen](#mogelijke-uitbreidingen)
 
 ## Wat wordt er aangemaakt
 
@@ -12,14 +25,18 @@ Volledig geautomatiseerde deployment van een WordPress stack op Azure met **Terr
 
 ## Vereisten
 
+Zie [hier voor installatie instructies](./PREREQUISITES.md) voor verschillende platformen.
+
 | Vereiste | Opmerkingen |
 |---|---|
 | [Terraform](https://developer.hashicorp.com/terraform/install) ≥ 1.5 | Infrastructuur provisioning |
 | [Azure CLI](https://learn.microsoft.com/cli/azure/install-azure-cli) | Authenticatie (`az login`) |
-| [uv](https://astral.sh/uv) | Python (voor ansible) dependency beheer |
+| [uv](https://astral.sh/uv) | Python dependency beheer (Ansible in geïsoleerde venv) |
+| [Python](https://www.python.org/) ≥ 3.12 | Runtime voor Ansible |
 | SSH sleutelpaar | Standaard: `~/.ssh/id_ed25519_hogent` |
 | [Make](https://makefiletutorial.com/) | Makefile command runner |
 
+> **📖 Gedetailleerde installatie-instructies** per OS (Windows/WSL, macOS, Debian, Arch, Gentoo, NixOS, FreeBSD): zie **[PREREQUISITES.md](PREREQUISITES.md)**
 
 Op **NixOS** kan je de dev shell opstarten met `nix develop`.
 

@@ -7,8 +7,8 @@ services:
       - DOMAIN=https://{{ wp_domain }}/secrets
       - SIGNUPS_ALLOWED=true
       - WEBSOCKET_ENABLED=true
-{% if vaultwarden_admin_token | default('') | length > 0 %}
-      - ADMIN_TOKEN={{ vaultwarden_admin_token }}
+{% if vaultwarden_admin_token_hash | default('') | length > 0 %}
+      - ADMIN_TOKEN={{ vaultwarden_admin_token_hash | replace('$', '$$') }}
 {% endif %}
     ports:
       - "127.0.0.1:8080:80"

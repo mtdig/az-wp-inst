@@ -90,7 +90,8 @@ type AnsibleVars struct {
 func findRoot() string {
 	dir, _ := os.Getwd()
 	for {
-		if _, err := os.Stat(filepath.Join(dir, "Makefile")); err == nil {
+		// zoek naar pyproject.toml — uniek voor de projectroot
+		if _, err := os.Stat(filepath.Join(dir, "pyproject.toml")); err == nil {
 			return dir
 		}
 		parent := filepath.Dir(dir)
@@ -614,7 +615,7 @@ func main() {
 				Value(&tf.ResourceGroupName),
 			huh.NewInput().
 				Title("DNS Label").
-				Description("Publiek IP DNS label → <label>.francecentral.cloudapp.azure.com").
+				Description("Publiek IP DNS label -> <label>.francecentral.cloudapp.azure.com").
 				Value(&tf.PublicIPDNSLabel),
 			huh.NewInput().
 				Title("MySQL Server Naam").

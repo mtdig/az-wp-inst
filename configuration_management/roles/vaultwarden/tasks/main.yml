@@ -53,6 +53,27 @@
     - /opt/vaultwarden
     - /opt/vaultwarden/data
 
+- name: argon2 CLI installeren
+  apt:
+    name: argon2
+    state: present
+  when: vaultwarden_admin_token | default('') | length > 0
+
+- name: Vaultwarden admin token hashen met Argon2
+  shell: |
+    SALT=$(openssl rand -base64 16)
+    echo -n '{{ vaultwarden_admin_token }}' | argon2 "$SALT" -id -m 16 -t 3 -p 4 -l 32 -e
+  register: vw_hash_result
+  changed_when: false
+  no_log: true
+  when: vaultwarden_admin_token | default('') | length > 0
+
+- name: Gehashte admin token opslaan
+  set_fact:
+    vaultwarden_admin_token_hash: "{{ vw_hash_result.stdout_lines | last }}"
+  when: vaultwarden_admin_token | default('') | length > 0
+  no_log: true
+
 - name: Docker Compose bestand aanmaken
   template:
     src: docker-compose.yml.j2
