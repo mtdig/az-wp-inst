@@ -95,6 +95,29 @@
       }}
   when: not sem_bootstrap_flag.stat.exists
 
+- name: Terraform environment variabelen samenstellen
+  set_fact:
+    sem_tf_env_json: >-
+      {}
+    sem_tf_env_vars: >-
+      {{
+        {
+          "ARM_SUBSCRIPTION_ID": tf_arm_subscription_id | default(subscription_id | default('')),
+          "ARM_CLIENT_ID": tf_arm_client_id | default(''),
+          "ARM_CLIENT_SECRET": tf_arm_client_secret | default(''),
+          "ARM_TENANT_ID": tf_arm_tenant_id | default(''),
+          "TF_VAR_subscription_id": subscription_id | default(''),
+          "TF_VAR_admin_public_key": tf_admin_public_key | default(''),
+          "TF_VAR_mysql_admin_password": db_admin_password | default(''),
+          "TF_VAR_resource_group_name": resource_group_name | default('SELab-Wordpress'),
+          "TF_VAR_public_ip_dns_label": public_ip_dns_label | default(''),
+          "TF_VAR_mysql_server_name": mysql_server_name | default(''),
+          "TF_VAR_mysql_admin_login": mysql_admin_login | default('wordpressdb'),
+          "TF_IN_AUTOMATION": "1"
+        } | to_nice_json
+      }}
+  when: not sem_bootstrap_flag.stat.exists
+
 # ---- Project restore ----
 
 - name: Project bootstrap via restore endpoint
@@ -132,18 +155,75 @@
           ssh_key: "VM SSH sleutel"
           become_key: "Geen"
           type: "static"
+        - name: "default"
+          inventory: "default"
+          ssh_key: "Geen"
+          become_key: "Geen"
+          type: "terraform-workspace"
       environments:
         - name: "Productie"
           password: ""
           json: "{{ sem_env_json }}"
           env: "{}"
+        - name: "Terraform"
+          password: ""
+          json: "{{ sem_tf_env_json }}"
+          env: "{{ sem_tf_env_vars }}"
       views:
-        - title: "Configuratie"
+        - title: "Provisioning"
           position: 0
-        - title: "Onderhoud"
+        - title: "Configuratie"
           position: 1
+        - title: "Onderhoud"
+          position: 2
       templates:
-        # -- Configuratie view --
+        # -- Provisioning view (Terraform) --
+        - name: "🏗️ Infrastructuur plannen (plan)"
+          app: "terraform"
+          playbook: "provisioning"
+          description: >-
+            Toont welke Azure resources Terraform zou aanmaken, wijzigen of
+            verwijderen. Er wordt niets gewijzigd – dit is alleen een preview.
+            Review de output en keur goed om door te gaan met Apply.
+          repository: "az-wp-inst"
+          inventory: "default"
+          environment: "Terraform"
+          view: "Provisioning"
+          type: ""
+          allow_override_args_in_task: false
+          suppress_success_alerts: false
+          survey_vars: []
+        - name: "🚀 Infrastructuur aanmaken (apply)"
+          app: "terraform"
+          playbook: "provisioning"
+          description: >-
+            Maakt de volledige Azure infrastructuur aan of past wijzigingen toe:
+            Resource Group, VNet, NSG, Publiek IP, VM en MySQL Flexible Server.
+            Toont eerst een plan ter bevestiging voordat er iets gewijzigd wordt.
+          repository: "az-wp-inst"
+          inventory: "default"
+          environment: "Terraform"
+          view: "Provisioning"
+          type: ""
+          allow_override_args_in_task: false
+          suppress_success_alerts: false
+          survey_vars: []
+        - name: "💥 Infrastructuur vernietigen (destroy)"
+          app: "terraform"
+          playbook: "provisioning"
+          description: >-
+            WAARSCHUWING: Verwijdert ALLE Azure resources in de resourcegroep!
+            Dit omvat de VM, MySQL database, netwerk en alle data.
+            Gebruik alleen als je de omgeving volledig wilt opruimen.
+          repository: "az-wp-inst"
+          inventory: "default"
+          environment: "Terraform"
+          view: "Provisioning"
+          type: ""
+          allow_override_args_in_task: false
+          suppress_success_alerts: false
+          survey_vars: []
+        # -- Configuratie view (Ansible) --
         - name: "🚀 Volledige stack deployen"
           app: "ansible"
           playbook: "configuration_management/playbooks/site.yml"

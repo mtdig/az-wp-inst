@@ -84,6 +84,11 @@ type AnsibleVars struct {
 	SemaphoreAdminUser    string `json:"semaphore_admin_user,omitempty"`
 	SemaphoreAdminPass    string `json:"semaphore_admin_password,omitempty"`
 
+	TfArmClientID     string `json:"tf_arm_client_id,omitempty"`
+	TfArmClientSecret string `json:"tf_arm_client_secret,omitempty"`
+	TfArmTenantID     string `json:"tf_arm_tenant_id,omitempty"`
+	TfAdminPublicKey  string `json:"tf_admin_public_key,omitempty"`
+
 	SSHHostAlias string `json:"ssh_host_alias"`
 	SSHKey       string `json:"ssh_key"`
 }
@@ -747,6 +752,26 @@ func main() {
 				Description("login wachtwoord (automatisch gegenereerd)").
 				Value(&ans.SemaphoreAdminPass).
 				EchoMode(huh.EchoModePassword),
+			huh.NewNote().
+				Title("── Azure Service Principal (voor Terraform via Semaphore) ──").
+				Description("Optioneel: vul in als je Terraform vanuit Semaphore wilt draaien.\nAanmaken: az ad sp create-for-rbac --name semaphore-sp --role Contributor"),
+			huh.NewInput().
+				Title("ARM Client ID").
+				Description("Application (client) ID van de Service Principal").
+				Value(&ans.TfArmClientID),
+			huh.NewInput().
+				Title("ARM Client Secret").
+				Description("wachtwoord/secret van de Service Principal").
+				Value(&ans.TfArmClientSecret).
+				EchoMode(huh.EchoModePassword),
+			huh.NewInput().
+				Title("ARM Tenant ID").
+				Description("Azure Active Directory tenant ID").
+				Value(&ans.TfArmTenantID),
+			huh.NewInput().
+				Title("VM SSH Public Key").
+				Description("publieke SSH sleutel voor de VM (inhoud van .pub bestand)").
+				Value(&ans.TfAdminPublicKey),
 		),
 
 		huh.NewGroup(
