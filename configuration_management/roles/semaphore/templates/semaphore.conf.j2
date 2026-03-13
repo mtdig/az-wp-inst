@@ -1,0 +1,13 @@
+ProxyPreserveHost On
+RequestHeader set X-Forwarded-Proto "https"
+
+# WebSocket support voor live task output
+RewriteEngine On
+RewriteCond %{HTTP:Upgrade} =websocket [NC]
+RewriteRule ^/deploy/(.*)  ws://127.0.0.1:3000/deploy/$1 [P,L]
+
+ProxyPass        /deploy/ http://127.0.0.1:3000/deploy/
+ProxyPassReverse /deploy/ http://127.0.0.1:3000/deploy/
+
+# Trailing-slash redirect
+RedirectMatch 301 ^/deploy$ /deploy/

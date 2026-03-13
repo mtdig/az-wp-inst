@@ -1,0 +1,234 @@
+---
+# Semaphore UI – Ansible/Terraform deployment dashboard
+# Draait als Docker container, gebruikt de bestaande Azure MySQL instance
+
+- name: Docker dependencies installeren
+  apt:
+    name:
+      - ca-certificates
+      - curl
+      - gnupg
+    state: present
+    update_cache: true
+
+- name: Docker GPG sleutel toevoegen
+  shell: |
+    install -m 0755 -d /etc/apt/keyrings
+    curl -fsSL https://download.docker.com/linux/ubuntu/gpg \
+      -o /etc/apt/keyrings/docker.asc
+    chmod a+r /etc/apt/keyrings/docker.asc
+  args:
+    creates: /etc/apt/keyrings/docker.asc
+
+- name: Docker repository toevoegen
+  shell: |
+    echo \
+      "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] \
+      https://download.docker.com/linux/ubuntu \
+      $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
+      tee /etc/apt/sources.list.d/docker.list > /dev/null
+  args:
+    creates: /etc/apt/sources.list.d/docker.list
+
+- name: Docker Engine + Compose plugin installeren
+  apt:
+    name:
+      - docker-ce
+      - docker-ce-cli
+      - containerd.io
+      - docker-compose-plugin
+    state: present
+    update_cache: true
+
+- name: Docker service inschakelen
+  service:
+    name: docker
+    state: started
+    enabled: true
+
+# --- MySQL database voor Semaphore ---
+
+- name: Installeer PyMySQL (voor community.mysql modules)
+  apt:
+    name: python3-pymysql
+    state: present
+
+- name: Maak Semaphore databank aan op Azure MySQL
+  community.mysql.mysql_db:
+    name: semaphore
+    state: present
+    login_host: "{{ wp_db_host }}"
+    login_port: "{{ wp_db_port }}"
+    login_user: "{{ wp_db_admin_user }}"
+    login_password: "{{ db_admin_password }}"
+    ca_cert: /etc/ssl/certs/ca-certificates.crt
+    check_hostname: false
+
+- name: Maak Semaphore DB gebruiker aan op Azure MySQL
+  community.mysql.mysql_user:
+    name: semaphore
+    password: "{{ semaphore_db_password | default(db_wp_password) }}"
+    host: "%"
+    priv: "semaphore.*:ALL"
+    state: present
+    login_host: "{{ wp_db_host }}"
+    login_port: "{{ wp_db_port }}"
+    login_user: "{{ wp_db_admin_user }}"
+    login_password: "{{ db_admin_password }}"
+    ca_cert: /etc/ssl/certs/ca-certificates.crt
+    check_hostname: false
+
+# --- Semaphore SSH keypair ---
+# Genereert een dedicated SSH keypair waarmee de Semaphore container
+# (via Docker) terug kan SSHen naar de host VM.
+
+- name: SSH keypair voor Semaphore genereren
+  shell: |
+    ssh-keygen -t ed25519 -f /opt/semaphore/config/semaphore_ed25519 \
+      -N "" -C "semaphore@{{ wp_domain }}"
+  args:
+    creates: /opt/semaphore/config/semaphore_ed25519
+
+- name: Semaphore SSH keypair permissies zetten
+  file:
+    path: /opt/semaphore/config/semaphore_ed25519
+    mode: "0600"
+
+- name: Semaphore public key inlezen
+  slurp:
+    src: /opt/semaphore/config/semaphore_ed25519.pub
+  register: sem_ssh_pub_key
+
+- name: Semaphore public key toevoegen aan authorized_keys
+  authorized_key:
+    user: "{{ ansible_user | default('osboxes') }}"
+    key: "{{ sem_ssh_pub_key.content | b64decode | trim }}"
+    comment: "semaphore-deploy-key"
+    state: present
+
+- name: Semaphore private key inlezen
+  slurp:
+    src: /opt/semaphore/config/semaphore_ed25519
+  register: sem_ssh_private_key
+
+# --- Semaphore container ---
+
+- name: Semaphore directories aanmaken
+  file:
+    path: "{{ item }}"
+    state: directory
+    mode: "0755"
+  loop:
+    - /opt/semaphore
+    - /opt/semaphore/config
+
+- name: Access key encryption sleutel genereren
+  shell: head -c32 /dev/urandom | base64
+  register: semaphore_key_result
+  changed_when: false
+  args:
+    executable: /bin/bash
+
+- name: Cookie hash genereren
+  shell: head -c32 /dev/urandom | base64
+  register: semaphore_cookie_result
+  changed_when: false
+  args:
+    executable: /bin/bash
+
+- name: Controleer of keys.env al bestaat
+  stat:
+    path: /opt/semaphore/config/keys.env
+  register: keys_file_stat
+
+- name: Bestaande sleutels inlezen (indien aanwezig)
+  slurp:
+    src: /opt/semaphore/config/keys.env
+  register: existing_keys
+  when: keys_file_stat.stat.exists
+
+- name: Sleutels opslaan (eerste keer)
+  copy:
+    content: |
+      ACCESS_KEY={{ semaphore_key_result.stdout }}
+      COOKIE_HASH={{ semaphore_cookie_result.stdout }}
+    dest: /opt/semaphore/config/keys.env
+    mode: "0600"
+  when: not keys_file_stat.stat.exists
+
+- name: Sleutels parsen
+  set_fact:
+    semaphore_access_key: >-
+      {{ (existing_keys.content | b64decode | regex_search('ACCESS_KEY=(.+)', '\1') | first)
+         if keys_file_stat.stat.exists
+         else semaphore_key_result.stdout }}
+    semaphore_cookie_hash: >-
+      {{ (existing_keys.content | b64decode | regex_search('COOKIE_HASH=(.+)', '\1') | first)
+         if keys_file_stat.stat.exists
+         else semaphore_cookie_result.stdout }}
+
+- name: Docker Compose bestand aanmaken
+  template:
+    src: docker-compose.yml.j2
+    dest: /opt/semaphore/docker-compose.yml
+    mode: "0644"
+  register: sem_compose
+
+- name: Systemd service installeren
+  template:
+    src: semaphore.service.j2
+    dest: /etc/systemd/system/semaphore.service
+    mode: "0644"
+  register: sem_service
+
+- name: Systemd herladen
+  systemd:
+    daemon_reload: true
+  when: sem_service.changed
+
+- name: Semaphore service inschakelen en starten
+  systemd:
+    name: semaphore
+    state: "{{ 'restarted' if sem_compose.changed else 'started' }}"
+    enabled: true
+
+- name: Wacht tot Semaphore klaar is
+  uri:
+    url: "http://127.0.0.1:3000/deploy/"
+    status_code: [200, 301, 302]
+  register: sem_health
+  until: sem_health.status in [200, 301, 302]
+  retries: 20
+  delay: 5
+
+# --- Project bootstrap via API ---
+
+- name: Semaphore project bootstrappen
+  include_tasks: bootstrap.yml
+
+# --- Apache reverse proxy ---
+
+- name: Apache proxy modules inschakelen
+  apache2_module:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - proxy
+    - proxy_http
+    - proxy_wstunnel
+    - rewrite
+    - headers
+  notify: Apache herstarten
+
+- name: Apache reverse proxy configuratie voor Semaphore
+  template:
+    src: semaphore.conf.j2
+    dest: /etc/apache2/conf-available/semaphore.conf
+  notify: Apache herstarten
+
+- name: Semaphore Apache configuratie inschakelen
+  file:
+    src: /etc/apache2/conf-available/semaphore.conf
+    dest: /etc/apache2/conf-enabled/semaphore.conf
+    state: link
+  notify: Apache herstarten

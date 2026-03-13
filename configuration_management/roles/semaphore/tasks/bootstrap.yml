@@ -1,0 +1,295 @@
+---
+# Semaphore UI – Automatische project bootstrap via REST API
+# ============================================================
+# Maakt een volledig geconfigureerd project aan zodat teamleden
+# met één klik Ansible playbooks kunnen uitvoeren.
+#
+# Resultaat:
+#   - Repository:    az-wp-inst (GitHub, HTTPS)
+#   - Inventory:     Azure VM (statisch, pre-filled)
+#   - Environment:   Productie (alle ansible_vars + Terraform outputs)
+#   - Keys:          "Geen" (voor repo) + "SSH sleutel" (login_password voor VM)
+#   - Views:         Configuratie | Onderhoud
+#   - Templates:     4 kant-en-klare taken
+
+- name: Controleer of bootstrap al uitgevoerd is
+  stat:
+    path: /opt/semaphore/config/.bootstrapped
+  register: sem_bootstrap_flag
+
+- name: Bootstrap overslaan (al geconfigureerd)
+  debug:
+    msg: >-
+      Semaphore project is al geconfigureerd.
+      Verwijder /opt/semaphore/config/.bootstrapped om opnieuw te bootstrappen.
+  when: sem_bootstrap_flag.stat.exists
+
+# ---- API login ----
+
+- name: Semaphore API – Inloggen als admin
+  uri:
+    url: "http://127.0.0.1:3000/deploy/api/auth/login"
+    method: POST
+    body_format: json
+    body:
+      auth: "{{ semaphore_admin_user | default('admin') }}"
+      password: "{{ semaphore_admin_password }}"
+    status_code: [200, 204]
+    return_content: true
+  register: sem_login
+  when: not sem_bootstrap_flag.stat.exists
+
+- name: API token ophalen uit cookie
+  set_fact:
+    sem_cookie: "{{ sem_login.cookies_string }}"
+  when: not sem_bootstrap_flag.stat.exists
+
+- name: Controleer of project al bestaat
+  uri:
+    url: "http://127.0.0.1:3000/deploy/api/projects"
+    method: GET
+    headers:
+      Cookie: "{{ sem_cookie }}"
+    status_code: 200
+    return_content: true
+  register: sem_projects
+  when: not sem_bootstrap_flag.stat.exists
+
+# ---- Environment JSON samenstellen ----
+# Bevat alle variabelen die het playbook nodig heeft, inclusief
+# Terraform outputs. Teamleden hoeven niets aan te passen.
+
+- name: Environment variabelen samenstellen
+  set_fact:
+    sem_env_json: >-
+      {{
+        {
+          "tf_public_fqdn": wp_domain,
+          "tf_mysql_fqdn": wp_db_host,
+          "tf_mysql_admin_login": wp_db_admin_user,
+          "db_admin_password": db_admin_password,
+          "ansible_host": ansible_host | default(wp_domain),
+          "db_wp_password": db_wp_password,
+          "wp_admin_password": wp_admin_password,
+          "ansible_become_password": ansible_become_password,
+          "wp_path": wp_path | default("/var/www/wordpress"),
+          "wp_db_name": wp_db_name | default("wordpress"),
+          "wp_db_user": wp_db_user | default("wpuser"),
+          "wp_db_port": wp_db_port | default(3306),
+          "wp_db_ssl": wp_db_ssl | default(true),
+          "wp_admin_user": wp_admin_user | default("osboxes"),
+          "wp_admin_email": wp_admin_email,
+          "wp_title": wp_title | default("SELab Opdracht 4"),
+          "wp_locale": wp_locale | default("nl_BE"),
+          "skip_common": false,
+          "certbot_staging": certbot_staging | default(true),
+          "enable_vaultwarden": enable_vaultwarden | default(false),
+          "vaultwarden_admin_token": vaultwarden_admin_token | default(""),
+          "enable_tech_snake": enable_tech_snake | default(false),
+          "enable_semaphore": enable_semaphore | default(false),
+          "semaphore_admin_user": semaphore_admin_user | default("admin"),
+          "semaphore_admin_password": semaphore_admin_password,
+          "ssh_host_alias": ssh_host_alias | default("azosboxes"),
+          "ssh_key": "~/.ssh/id_ed25519_hogent"
+        } | to_nice_json
+      }}
+  when: not sem_bootstrap_flag.stat.exists
+
+# ---- Project restore ----
+
+- name: Project bootstrap via restore endpoint
+  uri:
+    url: "http://127.0.0.1:3000/deploy/api/projects/restore"
+    method: POST
+    headers:
+      Cookie: "{{ sem_cookie }}"
+      Content-Type: "application/json"
+    body_format: json
+    body:
+      meta:
+        name: "WordPress op Azure – Groep 99"
+        alert: false
+        max_parallel_tasks: 1
+      keys:
+        - name: "Geen"
+          type: "none"
+        - name: "VM SSH sleutel"
+          type: "ssh"
+          ssh:
+            login: "{{ ansible_user | default('osboxes') }}"
+            passphrase: ""
+            private_key: "{{ sem_ssh_private_key.content | b64decode }}"
+      repositories:
+        - name: "az-wp-inst"
+          git_url: "{{ semaphore_git_url | default('https://github.com/mtdig/az-wp-inst.git') }}"
+          git_branch: "{{ semaphore_git_branch | default('main') }}"
+          ssh_key: "Geen"
+      inventories:
+        - name: "Azure VM"
+          inventory: |
+            [webservers]
+            {{ wp_domain }} ansible_host={{ ansible_host | default(wp_domain) }} ansible_become_password={{ ansible_become_password }}
+          ssh_key: "VM SSH sleutel"
+          become_key: "Geen"
+          type: "static"
+      environments:
+        - name: "Productie"
+          password: ""
+          json: "{{ sem_env_json }}"
+          env: "{}"
+      views:
+        - title: "Configuratie"
+          position: 0
+        - title: "Onderhoud"
+          position: 1
+      templates:
+        # -- Configuratie view --
+        - name: "🚀 Volledige stack deployen"
+          app: "ansible"
+          playbook: "configuration_management/playbooks/site.yml"
+          description: >-
+            Configureert de volledige WordPress stack: Apache, PHP, WordPress,
+            Let's Encrypt, UFW, fail2ban en alle optionele componenten
+            (Vaultwarden, Tech Snake, Semaphore).
+            Dit is de standaard taak voor een volledige herconfiguratie.
+          repository: "az-wp-inst"
+          inventory: "Azure VM"
+          environment: "Productie"
+          view: "Configuratie"
+          type: ""
+          allow_override_args_in_task: true
+          suppress_success_alerts: false
+          survey_vars:
+            - name: "skip_common"
+              title: "Basis configuratie overslaan? (SSH, UFW, fail2ban)"
+              description: "Sla de common role over als die al eerder gedraaid is. Scheelt ~15 seconden."
+              type: "enum"
+              required: false
+              enum_values:
+                "false": "Nee – alles uitvoeren (standaard)"
+                "true": "Ja – common role overslaan"
+        - name: "⚙️ Alleen WordPress herconfigureren"
+          app: "ansible"
+          playbook: "configuration_management/playbooks/site.yml"
+          description: >-
+            Voert alleen de WordPress configuratie uit (wp-config.php, plugins, thema).
+            Handig na het wijzigen van database-instellingen of WordPress opties.
+          repository: "az-wp-inst"
+          inventory: "Azure VM"
+          environment: "Productie"
+          view: "Configuratie"
+          type: ""
+          allow_override_args_in_task: true
+          suppress_success_alerts: false
+          cli_args: "-e skip_common=true -e enable_vaultwarden=false -e enable_tech_snake=false -e enable_semaphore=false"
+          survey_vars: []
+        # -- Onderhoud view --
+        - name: "🔒 Beveiliging bijwerken"
+          app: "ansible"
+          playbook: "configuration_management/playbooks/site.yml"
+          description: >-
+            Draait alleen de beveiligingsconfiguratie: SSH hardening, UFW firewall
+            regels, fail2ban jails. Gebruik na wijziging van beveiligingsbeleid.
+          repository: "az-wp-inst"
+          inventory: "Azure VM"
+          environment: "Productie"
+          view: "Onderhoud"
+          type: ""
+          allow_override_args_in_task: true
+          suppress_success_alerts: false
+          cli_args: "-e enable_vaultwarden=false -e enable_tech_snake=false -e enable_semaphore=false -t common"
+          survey_vars: []
+        - name: "📦 Systeem pakketten updaten"
+          app: "ansible"
+          playbook: "configuration_management/playbooks/update.yml"
+          description: >-
+            Werkt alle systeem pakketten bij (apt upgrade) en herstart
+            services indien nodig. Gebruik voor periodiek onderhoud.
+          repository: "az-wp-inst"
+          inventory: "Azure VM"
+          environment: "Productie"
+          view: "Onderhoud"
+          type: ""
+          allow_override_args_in_task: false
+          suppress_success_alerts: false
+          survey_vars: []
+    status_code: [200, 201]
+    return_content: true
+  register: sem_restore
+  when:
+    - not sem_bootstrap_flag.stat.exists
+    - (sem_projects.json | default([]) | length) == 0
+
+# ---- SSH key invullen (restore endpoint slaat private key over) ----
+
+- name: Zoek nieuw project ID op
+  uri:
+    url: "http://127.0.0.1:3000/deploy/api/projects"
+    method: GET
+    headers:
+      Cookie: "{{ sem_cookie }}"
+    status_code: 200
+    return_content: true
+  register: sem_projects_after
+  when:
+    - not sem_bootstrap_flag.stat.exists
+    - sem_restore is not skipped
+
+- name: Project ID opslaan
+  set_fact:
+    sem_project_id: "{{ (sem_projects_after.json | last).id }}"
+  when:
+    - not sem_bootstrap_flag.stat.exists
+    - sem_restore is not skipped
+
+- name: Zoek SSH key ID op
+  uri:
+    url: "http://127.0.0.1:3000/deploy/api/project/{{ sem_project_id }}/keys"
+    method: GET
+    headers:
+      Cookie: "{{ sem_cookie }}"
+    status_code: 200
+    return_content: true
+  register: sem_keys_list
+  when:
+    - not sem_bootstrap_flag.stat.exists
+    - sem_restore is not skipped
+
+- name: SSH private key uploaden naar Semaphore
+  uri:
+    url: "http://127.0.0.1:3000/deploy/api/project/{{ sem_project_id }}/keys/{{ item.id }}"
+    method: PUT
+    headers:
+      Cookie: "{{ sem_cookie }}"
+      Content-Type: "application/json"
+    body_format: json
+    body:
+      id: "{{ item.id }}"
+      name: "{{ item.name }}"
+      type: "ssh"
+      project_id: "{{ sem_project_id | int }}"
+      override_secret: true
+      ssh:
+        login: "{{ ansible_user | default('osboxes') }}"
+        passphrase: ""
+        private_key: "{{ sem_ssh_private_key.content | b64decode }}"
+    status_code: [200, 204]
+  loop: "{{ sem_keys_list.json | default([]) | selectattr('type', 'equalto', 'ssh') | list }}"
+  loop_control:
+    label: "{{ item.name }}"
+  when:
+    - not sem_bootstrap_flag.stat.exists
+    - sem_restore is not skipped
+
+# ---- Bootstrap-vlag opslaan (helemaal aan het einde) ----
+
+- name: Bootstrap-vlag opslaan
+  copy:
+    content: |
+      Semaphore project gebootstrapt op {{ ansible_date_time.iso8601 }}
+      Project: WordPress op Azure – Groep 99
+    dest: /opt/semaphore/config/.bootstrapped
+    mode: "0644"
+  when:
+    - not sem_bootstrap_flag.stat.exists
+    - sem_restore is not skipped

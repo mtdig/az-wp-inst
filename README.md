@@ -163,6 +163,7 @@ opdracht4/
 │       ├── mysql_client/        # MySQL client, remote DB/gebruiker aanmaak
 │       ├── wordpress/           # Apache, PHP, WordPress, WP-CLI
 │       ├── vaultwarden/          # Vaultwarden wachtwoordkluis (Docker, /secrets)
+│       ├── semaphore/           # Semaphore UI deployment dashboard (Docker, /deploy)
 │       └── tech_snake/          # snake game (/snake)
 │
 └── devops/                      # Originele ARM templates (ter referentie)
@@ -174,17 +175,21 @@ opdracht4/
 
 Deze componenten zijn standaard uitgeschakeld en kunnen via `ansible_vars.json` (of de TUI config generator) ingeschakeld worden:
 
-| component | flag | rpute | beschrijving |
+| component | flag | route | beschrijving |
 |---|---|---|---|
 | **Vaultwarden** | `enable_vaultwarden` | `/secrets` | Self-hosted wachtwoordkluis (draait als Docker container). Lichtgewicht Bitwarden-compatibele server. |
 | **Tech Snake** | `enable_tech_snake` | `/snake` | Godot WebAssembly snake game. |
+| **Semaphore UI** | `enable_semaphore` | `/deploy` | Ansible/Terraform deployment dashboard. Teamleden kunnen via de web UI hun eigen WordPress stack deployen. Gebruikt de bestaande Azure MySQL als backend. |
 
 Voorbeeld in `ansible_vars.json`:
 
 ```json
 {
   "enable_vaultwarden": true,
-  "enable_tech_snake": true
+  "enable_tech_snake": true,
+  "enable_semaphore": true,
+  "semaphore_admin_user": "admin",
+  "semaphore_admin_password": "EenSterkWachtwoord"
 }
 ```
 

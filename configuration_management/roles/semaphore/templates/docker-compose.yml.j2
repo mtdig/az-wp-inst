@@ -1,0 +1,27 @@
+services:
+  semaphore:
+    image: semaphoreui/semaphore:latest
+    container_name: semaphore
+    restart: always
+    environment:
+      SEMAPHORE_DB_DIALECT: mysql
+      SEMAPHORE_DB_HOST: "{{ wp_db_host }}"
+      SEMAPHORE_DB_PORT: "{{ wp_db_port }}"
+      SEMAPHORE_DB_NAME: semaphore
+      SEMAPHORE_DB_USER: semaphore
+      SEMAPHORE_DB_PASS: "{{ semaphore_db_password | default(db_wp_password) }}"
+      SEMAPHORE_DB_OPTIONS: '{"tls":"true"}'
+      SEMAPHORE_PLAYBOOK_PATH: /tmp/semaphore/
+      SEMAPHORE_ADMIN: "{{ semaphore_admin_user | default('admin') }}"
+      SEMAPHORE_ADMIN_NAME: "{{ semaphore_admin_user | default('admin') | capitalize }}"
+      SEMAPHORE_ADMIN_EMAIL: "{{ wp_admin_email }}"
+      SEMAPHORE_ADMIN_PASSWORD: "{{ semaphore_admin_password }}"
+      SEMAPHORE_ACCESS_KEY_ENCRYPTION: "{{ semaphore_access_key }}"
+      SEMAPHORE_COOKIE_HASH: "{{ semaphore_cookie_hash }}"
+      SEMAPHORE_WEB_ROOT: "https://{{ wp_domain }}/deploy"
+    ports:
+      - "127.0.0.1:3000:3000"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - /opt/semaphore/data:/var/lib/semaphore

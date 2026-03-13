@@ -28,6 +28,8 @@
       when: enable_vaultwarden | default(false) | bool
     - role: tech_snake
       when: enable_tech_snake | default(false) | bool
+    - role: semaphore
+      when: enable_semaphore | default(false) | bool
 
   post_tasks:
     - name: Toon verbindingsinformatie
@@ -42,6 +44,8 @@
           - "{{ 'Vaultwarden Admin: https://' + wp_domain + '/secrets/admin' if (enable_vaultwarden | default(false) | bool and vaultwarden_admin_token | default('') | length > 0) else '' }}"
           - "{{ 'Admin Token:       ' + vaultwarden_admin_token if (enable_vaultwarden | default(false) | bool and vaultwarden_admin_token | default('') | length > 0) else '' }}"
           - "{{ 'Tech Snake:        https://' + wp_domain + '/snake' if (enable_tech_snake | default(false) | bool) else '' }}"
+          - "{{ 'Semaphore UI:      https://' + wp_domain + '/deploy' if (enable_semaphore | default(false) | bool) else '' }}"
+          - "{{ 'Semaphore Login:   admin / ' + semaphore_admin_password if (enable_semaphore | default(false) | bool) else '' }}"
           - "=========================================="
 
 - name: Lokale SSH config bijwerken

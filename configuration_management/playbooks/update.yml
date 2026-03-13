@@ -1,0 +1,44 @@
+---
+# Systeem pakketten bijwerken
+# Kan veilig herhaaldelijk gedraaid worden voor periodiek onderhoud.
+- name: Systeem pakketten bijwerken
+  hosts: all
+  become: true
+  gather_subset: min
+
+  tasks:
+    - name: APT cache vernieuwen
+      apt:
+        update_cache: true
+        cache_valid_time: 0
+
+    - name: Alle pakketten upgraden
+      apt:
+        upgrade: safe
+      register: apt_upgrade
+
+    - name: Toon bijgewerkte pakketten
+      debug:
+        msg: >-
+          {{ apt_upgrade.stdout_lines | default(['Geen pakketten bijgewerkt.']) }}
+      when: apt_upgrade.changed
+
+    - name: Controleer of herstart nodig is
+      stat:
+        path: /var/run/reboot-required
+      register: reboot_required
+
+    - name: Waarschuwing: herstart vereist
+      debug:
+        msg: >-
+          ⚠️  Er is een herstart nodig om alle updates te activeren.
+          Start de VM handmatig opnieuw op via de Azure Portal of
+          voer 'sudo reboot' uit via SSH.
+      when: reboot_required.stat.exists
+
+    - name: Apache herstarten (indien draaiend)
+      service:
+        name: apache2
+        state: restarted
+      when: apt_upgrade.changed
+      ignore_errors: true

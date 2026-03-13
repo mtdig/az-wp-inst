@@ -80,6 +80,9 @@ type AnsibleVars struct {
 	EnableVaultwarden     bool   `json:"enable_vaultwarden"`
 	VaultwardenAdminToken string `json:"vaultwarden_admin_token,omitempty"`
 	EnableTechSnake       bool   `json:"enable_tech_snake"`
+	EnableSemaphore       bool   `json:"enable_semaphore"`
+	SemaphoreAdminUser    string `json:"semaphore_admin_user,omitempty"`
+	SemaphoreAdminPass    string `json:"semaphore_admin_password,omitempty"`
 
 	SSHHostAlias string `json:"ssh_host_alias"`
 	SSHKey       string `json:"ssh_key"`
@@ -580,6 +583,14 @@ func main() {
 		_, _ = rand.Read(b)
 		ans.VaultwardenAdminToken = hex.EncodeToString(b)
 	}
+	if ans.SemaphoreAdminUser == "" {
+		ans.SemaphoreAdminUser = "admin"
+	}
+	if ans.SemaphoreAdminPass == "" {
+		b := make([]byte, 16)
+		_, _ = rand.Read(b)
+		ans.SemaphoreAdminPass = hex.EncodeToString(b)
+	}
 
 	if tf.ResourceGroupName == "" {
 		tf.ResourceGroupName = "SELab-Wordpress"
@@ -723,6 +734,19 @@ func main() {
 				Title("Tech Snake").
 				Description("snake game (WASM op /snake)").
 				Value(&ans.EnableTechSnake),
+			huh.NewConfirm().
+				Title("Semaphore UI").
+				Description("deployment dashboard voor teamleden (/deploy)").
+				Value(&ans.EnableSemaphore),
+			huh.NewInput().
+				Title("Semaphore Admin Gebruiker").
+				Description("login gebruikersnaam voor Semaphore UI").
+				Value(&ans.SemaphoreAdminUser),
+			huh.NewInput().
+				Title("Semaphore Admin Wachtwoord").
+				Description("login wachtwoord (automatisch gegenereerd)").
+				Value(&ans.SemaphoreAdminPass).
+				EchoMode(huh.EchoModePassword),
 		),
 
 		huh.NewGroup(

@@ -18,6 +18,9 @@
   "enable_vaultwarden": false,
   "vaultwarden_admin_token": "",
   "enable_tech_snake": false,
+  "enable_semaphore": false,
+  "semaphore_admin_user": "admin",
+  "semaphore_admin_password": "",
 
   "ssh_host_alias": "azosboxes",
   "ssh_key": "~/.ssh/id_ed25519_hogent"
