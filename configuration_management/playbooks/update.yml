@@ -28,7 +28,7 @@
         path: /var/run/reboot-required
       register: reboot_required
 
-    - name: Waarschuwing: herstart vereist
+    - name: Waarschuwing - herstart vereist
       debug:
         msg: >-
           ⚠️  Er is een herstart nodig om alle updates te activeren.
