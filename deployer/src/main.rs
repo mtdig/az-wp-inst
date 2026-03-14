@@ -116,19 +116,19 @@ async fn main() -> anyhow::Result<()> {
         )
         .route("/deploy/{id}/status", get(routes::deploy::poll_status))
         .route("/deploy/{id}/output", get(routes::deploy::get_output))
-        .with_state(state);
+        .with_state(state.clone());
 
     // Nest onder BASE_PATH als die gezet is
     let app = if base_path.is_empty() {
         inner.layer(session_layer)
     } else {
-        let bp = base_path.clone();
         Router::new()
             .nest(&base_path, inner)
-            // Redirect /app/ -> /app (nest() matcht niet op trailing slash)
+            // nest() matcht /app maar niet /app/ — voeg expliciete route toe
+            // zodat Apache's ProxyPass /app/ ook werkt (geen redirect loop)
             .route(
                 &format!("{}/", base_path),
-                get(move || async move { axum::response::Redirect::permanent(&bp) }),
+                get(routes::dashboard::index).with_state(state),
             )
             .layer(session_layer)
     };

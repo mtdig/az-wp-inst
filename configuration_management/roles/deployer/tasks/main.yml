@@ -130,7 +130,7 @@
 
 - name: Wacht tot Deployer draait
   uri:
-    url: "http://127.0.0.1:{{ deployer_port }}/login"
+    url: "http://127.0.0.1:{{ deployer_port }}{{ deployer_base_path | default('/app') }}/login"
     status_code: 200
   register: deployer_health
   retries: 10
