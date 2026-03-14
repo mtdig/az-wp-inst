@@ -76,10 +76,12 @@
   community.mysql.mysql_db:
     name: deployer
     state: present
-    login_host: "127.0.0.1"
-    login_user: root
-    login_password: "{{ semaphore_mysql_root_password | default('semaphore') }}"
-  ignore_errors: true
+    login_host: "{{ wp_db_host }}"
+    login_port: "{{ wp_db_port | default(3306) }}"
+    login_user: "{{ wp_db_admin_user }}"
+    login_password: "{{ db_admin_password }}"
+    ca_cert: /etc/ssl/certs/ca-certificates.crt
+    check_hostname: false
 
 - name: MySQL deployer gebruiker aanmaken
   community.mysql.mysql_user:
@@ -87,15 +89,19 @@
     password: "{{ deployer_db_password }}"
     host: "%"
     priv: "deployer.*:ALL"
-    login_host: "127.0.0.1"
-    login_user: root
-    login_password: "{{ semaphore_mysql_root_password | default('semaphore') }}"
     state: present
-  ignore_errors: true
+    login_host: "{{ wp_db_host }}"
+    login_port: "{{ wp_db_port | default(3306) }}"
+    login_user: "{{ wp_db_admin_user }}"
+    login_password: "{{ db_admin_password }}"
+    ca_cert: /etc/ssl/certs/ca-certificates.crt
+    check_hostname: false
 
 - name: Seed admin user als die nog niet bestaat
   shell: |
-    mysql -h 127.0.0.1 -u deployer -p'{{ deployer_db_password }}' deployer -e \
+    mysql -h {{ wp_db_host }} -P {{ wp_db_port | default(3306) }} \
+      -u deployer -p'{{ deployer_db_password }}' \
+      --ssl deployer -e \
       "INSERT IGNORE INTO users (id, username, full_name, password, is_admin)
        VALUES ('{{ deployer_admin_id }}', '{{ deployer_admin_user }}', '{{ deployer_admin_full_name }}', '{{ deployer_admin_password_hash }}', 1);"
   changed_when: false
