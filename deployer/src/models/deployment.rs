@@ -50,12 +50,12 @@ impl DeploymentStatus {
     /// CSS class voor de status badge.
     pub fn badge_class(&self) -> &'static str {
         match self {
-            Self::Draft => "badge-ghost",
-            Self::Provisioning | Self::Configuring | Self::Destroying => "badge-warning",
-            Self::Provisioned => "badge-info",
-            Self::Ready => "badge-success",
-            Self::Failed => "badge-error",
-            Self::Destroyed => "badge-neutral",
+            Self::Draft => "status-draft",
+            Self::Provisioning | Self::Configuring | Self::Destroying => "status-busy",
+            Self::Provisioned => "status-info",
+            Self::Ready => "status-ok",
+            Self::Failed => "status-err",
+            Self::Destroyed => "status-neutral",
         }
     }
 }

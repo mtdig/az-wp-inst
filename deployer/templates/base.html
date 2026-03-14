@@ -1,33 +1,367 @@
 <!DOCTYPE html>
-<html lang="nl" data-theme="dark">
+<html lang="nl">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Deployer{% endblock %} – Groep 99</title>
-    <link href="https://cdn.jsdelivr.net/npm/daisyui@5/themes.css" rel="stylesheet" type="text/css" />
-    <link href="https://cdn.jsdelivr.net/npm/daisyui@5/full.css" rel="stylesheet" type="text/css" />
-    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <title>{% block title %}Deployer{% endblock %} - Groep 99</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;700&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/htmx.org@2.0.4"></script>
+    <style>
+        /* === AS/400 5250 Terminal Theme === */
+        :root {
+            --grn:      #33ff33;
+            --grn-dim:  #1a9b1a;
+            --grn-hi:   #80ff80;
+            --cyan:     #33ffff;
+            --white:    #ffffff;
+            --bg:       #0a0a0a;
+            --bg-field: #0d1a0d;
+            --red:      #ff4444;
+            --yellow:   #ffff33;
+            --blue:     #33aaff;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'IBM Plex Mono', 'Courier New', monospace;
+            background: var(--bg);
+            color: var(--grn);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            font-size: 14px;
+            line-height: 1.5;
+            text-shadow: 0 0 3px rgba(51, 255, 51, 0.3);
+        }
+
+        /* Scanline overlay */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: repeating-linear-gradient(
+                0deg,
+                transparent,
+                transparent 2px,
+                rgba(0, 0, 0, 0.08) 2px,
+                rgba(0, 0, 0, 0.08) 4px
+            );
+            pointer-events: none;
+            z-index: 9999;
+        }
+
+        /* === Navigation Bar (System Line) === */
+        .term-nav {
+            background: var(--grn);
+            color: var(--bg);
+            padding: 2px 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 700;
+            text-shadow: none;
+            font-size: 14px;
+            min-height: 24px;
+        }
+        .term-nav a {
+            color: var(--bg);
+            text-decoration: none;
+            font-weight: 700;
+        }
+        .term-nav a:hover {
+            text-decoration: underline;
+        }
+
+        /* === Main Content Area === */
+        .term-main {
+            flex: 1;
+            padding: 16px 24px;
+            max-width: 100ch;
+            width: 100%;
+            margin: 0 auto;
+        }
+
+        /* === Footer (Function Key Line) === */
+        .term-footer {
+            background: var(--grn);
+            color: var(--bg);
+            padding: 2px 12px;
+            font-weight: 700;
+            text-shadow: none;
+            font-size: 13px;
+            min-height: 24px;
+        }
+
+        /* === Typography === */
+        h1, h2, h3 {
+            color: var(--white);
+            text-shadow: 0 0 5px rgba(255, 255, 255, 0.3);
+            font-weight: 700;
+        }
+        h1 { font-size: 18px; margin-bottom: 12px; }
+        h2 { font-size: 16px; margin-bottom: 8px; }
+        h3 { font-size: 14px; margin-bottom: 4px; text-transform: uppercase; }
+
+        a { color: var(--cyan); text-decoration: none; }
+        a:hover { text-decoration: underline; }
+
+        /* === Form Fields (5250 style underlined) === */
+        input[type="text"],
+        input[type="password"],
+        input[type="email"],
+        textarea,
+        select {
+            background: transparent;
+            border: none;
+            border-bottom: 2px solid var(--grn);
+            color: var(--grn-hi);
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 14px;
+            padding: 2px 4px;
+            outline: none;
+            width: 100%;
+            caret-color: var(--grn-hi);
+        }
+        input:focus, textarea:focus, select:focus {
+            border-bottom-color: var(--white);
+            background: var(--bg-field);
+        }
+        input::placeholder, textarea::placeholder {
+            color: var(--grn-dim);
+        }
+
+        /* Blinking block cursor effect for focused inputs */
+        input:focus, textarea:focus {
+            animation: cursor-glow 1s infinite;
+        }
+        @keyframes cursor-glow {
+            0%, 100% { box-shadow: inset -8px 0 0 0 rgba(51, 255, 51, 0.6); }
+            50%      { box-shadow: inset -8px 0 0 0 transparent; }
+        }
+
+        label {
+            color: var(--cyan);
+            font-size: 13px;
+            display: block;
+            margin-bottom: 2px;
+        }
+        .field-hint {
+            color: var(--grn-dim);
+            font-size: 12px;
+            margin-top: 2px;
+        }
+
+        /* === Buttons (Function Keys) === */
+        .btn {
+            font-family: 'IBM Plex Mono', monospace;
+            font-weight: 700;
+            font-size: 14px;
+            border: 1px solid var(--grn);
+            background: transparent;
+            color: var(--grn);
+            padding: 4px 16px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.1s;
+        }
+        .btn:hover {
+            background: var(--grn);
+            color: var(--bg);
+            text-shadow: none;
+            text-decoration: none;
+        }
+        .btn-primary {
+            border-color: var(--white);
+            color: var(--white);
+        }
+        .btn-primary:hover {
+            background: var(--white);
+            color: var(--bg);
+        }
+        .btn-danger {
+            border-color: var(--red);
+            color: var(--red);
+        }
+        .btn-danger:hover {
+            background: var(--red);
+            color: var(--bg);
+        }
+        .btn-warn {
+            border-color: var(--yellow);
+            color: var(--yellow);
+        }
+        .btn-warn:hover {
+            background: var(--yellow);
+            color: var(--bg);
+        }
+        .btn-ok {
+            border-color: var(--grn);
+            color: var(--grn);
+        }
+        .btn-ok:hover {
+            background: var(--grn);
+            color: var(--bg);
+        }
+
+        /* === Panels (Subfile Areas) === */
+        .panel {
+            border: 1px solid var(--grn-dim);
+            padding: 12px;
+            margin-bottom: 16px;
+        }
+        .panel-title {
+            color: var(--cyan);
+            font-weight: 700;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+            padding-bottom: 4px;
+            border-bottom: 1px solid var(--grn-dim);
+        }
+
+        /* === Data table / detail rows === */
+        .detail-row {
+            display: flex;
+            gap: 8px;
+            padding: 2px 0;
+        }
+        .detail-row dt {
+            color: var(--cyan);
+            min-width: 20ch;
+            flex-shrink: 0;
+        }
+        .detail-row dd {
+            color: var(--grn);
+        }
+
+        /* === Status Badges === */
+        .status {
+            font-weight: 700;
+            padding: 1px 8px;
+            font-size: 13px;
+            text-shadow: none;
+        }
+        .status-draft    { color: var(--bg); background: var(--grn-dim); }
+        .status-busy     { color: var(--bg); background: var(--yellow); animation: blink-status 1s infinite; }
+        .status-info     { color: var(--bg); background: var(--blue); }
+        .status-ok       { color: var(--bg); background: var(--grn); }
+        .status-err      { color: var(--bg); background: var(--red); }
+        .status-neutral  { color: var(--grn-dim); background: transparent; border: 1px solid var(--grn-dim); }
+
+        @keyframes blink-status {
+            0%, 100% { opacity: 1; }
+            50%      { opacity: 0.4; }
+        }
+
+        /* === Alert / Messages === */
+        .msg-error {
+            color: var(--red);
+            border: 1px solid var(--red);
+            padding: 6px 12px;
+            margin-bottom: 12px;
+        }
+        .msg-info {
+            color: var(--cyan);
+            border: 1px solid var(--cyan);
+            padding: 6px 12px;
+            margin-bottom: 12px;
+        }
+
+        /* === Grid helpers === */
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px 24px;
+        }
+        @media (max-width: 640px) {
+            .form-grid { grid-template-columns: 1fr; }
+        }
+
+        .form-group {
+            margin-bottom: 12px;
+        }
+
+        /* === Separator === */
+        .divider {
+            border: none;
+            border-top: 1px solid var(--grn-dim);
+            margin: 16px 0 12px;
+            position: relative;
+            text-align: center;
+        }
+        .divider-text {
+            background: var(--bg);
+            color: var(--grn-dim);
+            padding: 0 8px;
+            position: relative;
+            top: -10px;
+            font-size: 12px;
+            text-transform: uppercase;
+        }
+
+        /* === Output log === */
+        .output-log {
+            background: var(--bg);
+            border: 1px solid var(--grn-dim);
+            padding: 8px;
+            font-size: 13px;
+            max-height: 400px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            color: var(--grn);
+        }
+
+        /* === Deployment list items === */
+        .deploy-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 6px 8px;
+            border-bottom: 1px solid var(--grn-dim);
+            text-decoration: none;
+            color: var(--grn);
+        }
+        .deploy-item:hover {
+            background: var(--bg-field);
+            text-decoration: none;
+        }
+        .deploy-item-name {
+            color: var(--white);
+            font-weight: 700;
+        }
+        .deploy-item-sub {
+            color: var(--grn-dim);
+            font-size: 13px;
+        }
+
+        /* === Misc === */
+        .text-dim { color: var(--grn-dim); }
+        .text-hi  { color: var(--grn-hi); }
+        .text-cyan { color: var(--cyan); }
+        .text-white { color: var(--white); }
+        .text-red { color: var(--red); }
+        .mt { margin-top: 16px; }
+        .mb { margin-bottom: 16px; }
+        .gap-h { display: flex; gap: 8px; flex-wrap: wrap; }
+    </style>
 </head>
-<body class="min-h-screen bg-base-200">
+<body>
     {% block nav %}
-    <nav class="navbar bg-base-100 shadow-md px-6">
-        <div class="flex-1">
-            <a href="{{ base }}/" class="text-xl font-bold text-primary"> Deployer</a>
-            <span class="ml-2 text-sm opacity-60">Groep 99</span>
-        </div>
-        <div class="flex-none">
-            {% block nav_right %}{% endblock %}
-        </div>
-    </nav>
+    <div class="term-nav">
+        <span><a href="{{ base }}/">DEPLOYER</a>  Groep 99  SELab Opdracht 4</span>
+        <span>{% block nav_right %}{% endblock %}</span>
+    </div>
     {% endblock %}
 
-    <main class="container mx-auto px-4 py-8 max-w-4xl">
+    <div class="term-main">
         {% block content %}{% endblock %}
-    </main>
+    </div>
 
-    <footer class="footer footer-center p-4 text-base-content/60">
-        <p>SELab Opdracht 4 – WordPress op Azure</p>
-    </footer>
+    <div class="term-footer">
+        F1=Help  F3=Exit  F5=Refresh  F12=Cancel    |    WordPress op Azure - HOGENT
+    </div>
 </body>
 </html>

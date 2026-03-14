@@ -3,147 +3,107 @@
 {% block title %}Nieuwe Deployment{% endblock %}
 
 {% block nav_right %}
-<a href="{{ base }}/" class="btn btn-ghost btn-sm">← Terug</a>
+<a href="{{ base }}/">F3=Terug</a>
 {% endblock %}
 
 {% block content %}
-<div class="card bg-base-100 shadow-xl">
-    <div class="card-body">
-        <h2 class="card-title text-2xl mb-6">Nieuwe Deployment aanmaken</h2>
+<h1>NIEUWE DEPLOYMENT AANMAKEN</h1>
 
-        {% if let Some(msg) = error %}
-        <div class="alert alert-error mb-4">
-            <span>{{ msg }}</span>
-        </div>
-        {% endif %}
+{% if let Some(msg) = error %}
+<div class="msg-error">FOUT: {{ msg }}</div>
+{% endif %}
 
-        <form method="POST" action="{{ base }}/deploy" class="space-y-6">
-            <!-- Basis -->
-            <div class="divider">Naam</div>
+<form method="POST" action="{{ base }}/deploy">
 
-            <div class="form-control">
-                <label class="label" for="name">
-                    <span class="label-text">Deployment naam</span>
-                </label>
-                <input type="text" id="name" name="name" placeholder="bv. piet, lisa, test"
-                       class="input input-bordered w-full" required>
-                <label class="label">
-                    <span class="label-text-alt">Unieke naam voor deze deployment (jouw naam)</span>
-                </label>
-            </div>
+    <!-- Naam -->
+    <hr class="divider"><span class="divider-text">Naam</span>
 
-            <!-- Azure -->
-            <div class="divider">Azure Configuratie</div>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div class="form-control">
-                    <label class="label" for="subscription_id">
-                        <span class="label-text">Subscription ID</span>
-                    </label>
-                    <input type="text" id="subscription_id" name="subscription_id"
-                           class="input input-bordered w-full" required>
-                </div>
-
-                <div class="form-control">
-                    <label class="label" for="resource_group_name">
-                        <span class="label-text">Resource Group</span>
-                    </label>
-                    <input type="text" id="resource_group_name" name="resource_group_name"
-                           value="SELab-Wordpress" class="input input-bordered w-full" required>
-                </div>
-
-                <div class="form-control">
-                    <label class="label" for="public_ip_dns_label">
-                        <span class="label-text">DNS Label</span>
-                    </label>
-                    <input type="text" id="public_ip_dns_label" name="public_ip_dns_label"
-                           placeholder="sel-opdracht4-groep99-piet"
-                           class="input input-bordered w-full" required>
-                    <label class="label">
-                        <span class="label-text-alt">&lt;label&gt;.francecentral.cloudapp.azure.com</span>
-                    </label>
-                </div>
-
-                <div class="form-control">
-                    <label class="label" for="mysql_server_name">
-                        <span class="label-text">MySQL Server naam</span>
-                    </label>
-                    <input type="text" id="mysql_server_name" name="mysql_server_name"
-                           placeholder="piet-wordpressdb"
-                           class="input input-bordered w-full" required>
-                </div>
-
-                <div class="form-control">
-                    <label class="label" for="mysql_admin_login">
-                        <span class="label-text">MySQL Admin login</span>
-                    </label>
-                    <input type="text" id="mysql_admin_login" name="mysql_admin_login"
-                           value="wordpressdb" class="input input-bordered w-full" required>
-                </div>
-
-                <div class="form-control">
-                    <label class="label" for="mysql_admin_password">
-                        <span class="label-text">MySQL Admin wachtwoord</span>
-                    </label>
-                    <input type="password" id="mysql_admin_password" name="mysql_admin_password"
-                           class="input input-bordered w-full" required>
-                </div>
-            </div>
-
-            <!-- Azure Auth info -->
-            <div class="alert alert-info mt-4">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-current shrink-0 w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                <span>Azure authenticatie verloopt automatisch via de <strong>managed identity</strong> van de server. Geen Service Principal nodig.</span>
-            </div>
-
-            <!-- SSH sleutel -->
-            <div class="divider">SSH Sleutel</div>
-
-            <div class="form-control">
-                <label class="label" for="admin_public_key">
-                    <span class="label-text">SSH publieke sleutel</span>
-                </label>
-                <textarea id="admin_public_key" name="admin_public_key" rows="3"
-                          placeholder="ssh-ed25519 AAAA... gebruiker@host"
-                          class="textarea textarea-bordered w-full font-mono text-xs" required></textarea>
-                <label class="label">
-                    <span class="label-text-alt">Plak hier je publieke sleutel (bv. inhoud van <code>~/.ssh/id_ed25519.pub</code>). Deze wordt gebruikt om in te loggen op je VM.</span>
-                </label>
-            </div>
-
-            <!-- Wachtwoorden -->
-            <div class="divider">Wachtwoorden</div>
-
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div class="form-control">
-                    <label class="label" for="ansible_become_password">
-                        <span class="label-text">VM sudo wachtwoord</span>
-                    </label>
-                    <input type="password" id="ansible_become_password" name="ansible_become_password"
-                           value="osboxes.org" class="input input-bordered w-full" required>
-                </div>
-
-                <div class="form-control">
-                    <label class="label" for="wp_admin_password">
-                        <span class="label-text">WordPress admin wachtwoord</span>
-                    </label>
-                    <input type="password" id="wp_admin_password" name="wp_admin_password"
-                           class="input input-bordered w-full" required>
-                </div>
-
-                <div class="form-control">
-                    <label class="label" for="db_wp_password">
-                        <span class="label-text">WordPress DB wachtwoord</span>
-                    </label>
-                    <input type="password" id="db_wp_password" name="db_wp_password"
-                           class="input input-bordered w-full" required>
-                </div>
-            </div>
-
-            <button type="submit" class="btn btn-primary w-full mt-4">
-                Deployment aanmaken
-            </button>
-        </form>
+    <div class="form-group">
+        <label for="name">Deployment naam . . .</label>
+        <input type="text" id="name" name="name" placeholder="bv. piet, lisa, test" required>
+        <span class="field-hint">Unieke naam voor deze deployment (jouw naam)</span>
     </div>
-</div>
+
+    <!-- Azure -->
+    <hr class="divider"><span class="divider-text">Azure Configuratie</span>
+
+    <div class="form-grid">
+        <div class="form-group">
+            <label for="subscription_id">Subscription ID . .</label>
+            <input type="text" id="subscription_id" name="subscription_id" required>
+        </div>
+
+        <div class="form-group">
+            <label for="resource_group_name">Resource Group . . .</label>
+            <input type="text" id="resource_group_name" name="resource_group_name"
+                   value="SELab-Wordpress" required>
+        </div>
+
+        <div class="form-group">
+            <label for="public_ip_dns_label">DNS Label . . . . .</label>
+            <input type="text" id="public_ip_dns_label" name="public_ip_dns_label"
+                   placeholder="sel-opdracht4-groep99-piet" required>
+            <span class="field-hint">&lt;label&gt;.francecentral.cloudapp.azure.com</span>
+        </div>
+
+        <div class="form-group">
+            <label for="mysql_server_name">MySQL Server naam .</label>
+            <input type="text" id="mysql_server_name" name="mysql_server_name"
+                   placeholder="piet-wordpressdb" required>
+        </div>
+
+        <div class="form-group">
+            <label for="mysql_admin_login">MySQL Admin login .</label>
+            <input type="text" id="mysql_admin_login" name="mysql_admin_login"
+                   value="wordpressdb" required>
+        </div>
+
+        <div class="form-group">
+            <label for="mysql_admin_password">MySQL Admin ww . . .</label>
+            <input type="password" id="mysql_admin_password" name="mysql_admin_password" required>
+        </div>
+    </div>
+
+    <!-- Info -->
+    <div class="msg-info" style="margin-top: 12px;">
+        INFO: Azure authenticatie verloopt automatisch via de managed identity van de server. Geen Service Principal nodig.
+    </div>
+
+    <!-- SSH -->
+    <hr class="divider"><span class="divider-text">SSH Sleutel</span>
+
+    <div class="form-group">
+        <label for="admin_public_key">SSH publieke sleutel</label>
+        <textarea id="admin_public_key" name="admin_public_key" rows="3"
+                  placeholder="ssh-ed25519 AAAA... gebruiker@host" required></textarea>
+        <span class="field-hint">Plak hier je publieke sleutel (bv. inhoud van ~/.ssh/id_ed25519.pub). Deze wordt gebruikt om in te loggen op je VM.</span>
+    </div>
+
+    <!-- Wachtwoorden -->
+    <hr class="divider"><span class="divider-text">Wachtwoorden</span>
+
+    <div class="form-grid" style="grid-template-columns: 1fr 1fr 1fr;">
+        <div class="form-group">
+            <label for="ansible_become_password">VM sudo wachtwoord</label>
+            <input type="password" id="ansible_become_password" name="ansible_become_password"
+                   value="osboxes.org" required>
+        </div>
+
+        <div class="form-group">
+            <label for="wp_admin_password">WordPress admin ww</label>
+            <input type="password" id="wp_admin_password" name="wp_admin_password" required>
+        </div>
+
+        <div class="form-group">
+            <label for="db_wp_password">WordPress DB ww . .</label>
+            <input type="password" id="db_wp_password" name="db_wp_password" required>
+        </div>
+    </div>
+
+    <div class="mt">
+        <button type="submit" class="btn btn-primary" style="width: 100%;">
+            Enter = Deployment aanmaken
+        </button>
+    </div>
+</form>
 {% endblock %}
