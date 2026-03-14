@@ -118,7 +118,9 @@ impl Orchestrator {
 
     /// Maak of update de Terraform environment in Semaphore.
     async fn ensure_tf_environment(&self, d: &Deployment) -> Result<i64> {
+        let existing_id = d.sem_tf_environment_id.map(|v| v as i64);
         let env = CreateEnvironment {
+            id: existing_id,
             name: format!("TF – {}", d.name),
             project_id: self.sem.project_id,
             password: String::new(),
@@ -126,11 +128,11 @@ impl Orchestrator {
             env: Self::build_tf_env_vars(d).to_string(),
         };
 
-        if let Some(existing_id) = d.sem_tf_environment_id {
+        if let Some(existing_id) = existing_id {
             self.sem
-                .update_environment(existing_id as i64, env)
+                .update_environment(existing_id, env)
                 .await?;
-            Ok(existing_id as i64)
+            Ok(existing_id)
         } else {
             let resp = self.sem.create_environment(env).await?;
             Ok(resp.id)
@@ -175,7 +177,9 @@ impl Orchestrator {
 
     /// Maak of update de Ansible environment in Semaphore.
     async fn ensure_ansible_environment(&self, d: &Deployment) -> Result<i64> {
+        let existing_id = d.sem_environment_id.map(|v| v as i64);
         let env = CreateEnvironment {
+            id: existing_id,
             name: format!("Ansible – {}", d.name),
             project_id: self.sem.project_id,
             password: String::new(),
@@ -183,11 +187,11 @@ impl Orchestrator {
             env: "{}".to_string(),
         };
 
-        if let Some(existing_id) = d.sem_environment_id {
+        if let Some(existing_id) = existing_id {
             self.sem
-                .update_environment(existing_id as i64, env)
+                .update_environment(existing_id, env)
                 .await?;
-            Ok(existing_id as i64)
+            Ok(existing_id)
         } else {
             let resp = self.sem.create_environment(env).await?;
             Ok(resp.id)
@@ -208,6 +212,7 @@ impl Orchestrator {
             .await?
             .context("Key 'Geen' niet gevonden in Semaphore")?;
 
+        let existing_id = d.sem_inventory_id.map(|v| v as i64);
         let inventory_content = format!(
             "[webservers]\n{fqdn} ansible_host={ip} ansible_become_password={become_pw}",
             fqdn = d.tf_public_fqdn,
@@ -216,6 +221,7 @@ impl Orchestrator {
         );
 
         let inv = CreateInventory {
+            id: existing_id,
             name: format!("VM – {}", d.name),
             project_id: self.sem.project_id,
             inventory: inventory_content,
@@ -224,11 +230,11 @@ impl Orchestrator {
             inv_type: "static".to_string(),
         };
 
-        if let Some(existing_id) = d.sem_inventory_id {
+        if let Some(existing_id) = existing_id {
             self.sem
-                .update_inventory(existing_id as i64, inv)
+                .update_inventory(existing_id, inv)
                 .await?;
-            Ok(existing_id as i64)
+            Ok(existing_id)
         } else {
             let resp = self.sem.create_inventory(inv).await?;
             Ok(resp.id)

@@ -30,6 +30,8 @@ pub struct SemaphoreTask {
 
 #[derive(Debug, Serialize)]
 pub struct CreateEnvironment {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub id: Option<i64>,
     pub name: String,
     pub project_id: i64,
     pub password: String,
@@ -45,6 +47,8 @@ pub struct EnvironmentResponse {
 
 #[derive(Debug, Serialize)]
 pub struct CreateInventory {
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub id: Option<i64>,
     pub name: String,
     pub project_id: i64,
     pub inventory: String,
