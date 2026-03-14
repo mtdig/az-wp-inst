@@ -90,37 +90,10 @@
                 </div>
             </div>
 
-            <!-- Service Principal -->
-            <div class="divider">Azure Service Principal</div>
-            <p class="text-sm opacity-60 -mt-2 mb-2">
-                Nodig voor Terraform authenticatie. Maak een SP aan via
-                <code>az ad sp create-for-rbac --role Contributor --scopes /subscriptions/&lt;id&gt;</code>
-            </p>
-
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div class="form-control">
-                    <label class="label" for="arm_client_id">
-                        <span class="label-text">Client ID (appId)</span>
-                    </label>
-                    <input type="text" id="arm_client_id" name="arm_client_id"
-                           class="input input-bordered w-full" required>
-                </div>
-
-                <div class="form-control">
-                    <label class="label" for="arm_client_secret">
-                        <span class="label-text">Client Secret</span>
-                    </label>
-                    <input type="password" id="arm_client_secret" name="arm_client_secret"
-                           class="input input-bordered w-full" required>
-                </div>
-
-                <div class="form-control">
-                    <label class="label" for="arm_tenant_id">
-                        <span class="label-text">Tenant ID</span>
-                    </label>
-                    <input type="text" id="arm_tenant_id" name="arm_tenant_id"
-                           class="input input-bordered w-full" required>
-                </div>
+            <!-- Azure Auth info -->
+            <div class="alert alert-info mt-4">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-current shrink-0 w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                <span>Azure authenticatie verloopt automatisch via de <strong>managed identity</strong> van de server. Geen Service Principal nodig.</span>
             </div>
 
             <!-- Wachtwoorden -->

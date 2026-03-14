@@ -70,6 +70,13 @@ async fn main() -> anyhow::Result<()> {
     {
         sqlx::query(statement).execute(&pool).await.ok();
     }
+    for statement in include_str!("../migrations/002_drop_sp_columns.sql")
+        .split(';')
+        .map(str::trim)
+        .filter(|s| !s.is_empty() && !s.starts_with("--"))
+    {
+        sqlx::query(statement).execute(&pool).await.ok();
+    }
     tracing::info!("Migraties uitgevoerd");
 
     // Sessie store (in-memory, voldoende voor enkele VM)

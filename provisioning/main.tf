@@ -79,6 +79,17 @@ module "compute" {
 }
 
 # -----------------------------------------------------------------------------
+# Managed Identity – Contributor rol voor VM (Semaphore/Terraform auth)
+# -----------------------------------------------------------------------------
+data "azurerm_subscription" "current" {}
+
+resource "azurerm_role_assignment" "vm_contributor" {
+  scope                = data.azurerm_subscription.current.id
+  role_definition_name = "Contributor"
+  principal_id         = module.compute.identity_principal_id
+}
+
+# -----------------------------------------------------------------------------
 # Databank – MySQL Flexible Server + firewallregels
 # -----------------------------------------------------------------------------
 module "database" {

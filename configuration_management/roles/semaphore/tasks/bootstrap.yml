@@ -103,10 +103,8 @@
     sem_tf_env_vars: >-
       {{
         {
+          "ARM_USE_MSI": "true",
           "ARM_SUBSCRIPTION_ID": tf_arm_subscription_id | default(subscription_id | default('')),
-          "ARM_CLIENT_ID": tf_arm_client_id | default(''),
-          "ARM_CLIENT_SECRET": tf_arm_client_secret | default(''),
-          "ARM_TENANT_ID": tf_arm_tenant_id | default(''),
           "TF_VAR_subscription_id": subscription_id | default(''),
           "TF_VAR_admin_public_key": tf_admin_public_key | default(''),
           "TF_VAR_mysql_admin_password": db_admin_password | default(''),

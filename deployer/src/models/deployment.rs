@@ -58,11 +58,6 @@ pub struct Deployment {
     pub mysql_admin_login: String,
     pub mysql_admin_password_ref: String,
 
-    // SP credential refs (Vaultwarden item IDs)
-    pub arm_client_id_ref: String,
-    pub arm_client_secret_ref: String,
-    pub arm_tenant_id_ref: String,
-
     // Terraform outputs
     pub tf_public_ip: String,
     pub tf_public_fqdn: String,

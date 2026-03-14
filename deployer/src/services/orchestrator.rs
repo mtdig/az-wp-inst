@@ -102,10 +102,8 @@ impl Orchestrator {
     /// Bouw de Terraform environment vars voor deze deployment.
     fn build_tf_env_vars(d: &Deployment) -> serde_json::Value {
         json!({
+            "ARM_USE_MSI": "true",
             "ARM_SUBSCRIPTION_ID": d.subscription_id,
-            "ARM_CLIENT_ID": d.arm_client_id_ref,
-            "ARM_CLIENT_SECRET": d.arm_client_secret_ref,
-            "ARM_TENANT_ID": d.arm_tenant_id_ref,
             "TF_VAR_subscription_id": d.subscription_id,
             "TF_VAR_admin_public_key": "",
             "TF_VAR_mysql_admin_password": d.mysql_admin_password_ref,

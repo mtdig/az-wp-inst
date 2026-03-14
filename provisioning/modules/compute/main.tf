@@ -27,6 +27,10 @@ resource "azurerm_linux_virtual_machine" "this" {
     version   = "latest"
   }
 
+  identity {
+    type = "SystemAssigned"
+  }
+
   boot_diagnostics {}
 
   tags = var.tags

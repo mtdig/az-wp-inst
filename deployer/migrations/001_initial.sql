@@ -23,11 +23,6 @@ CREATE TABLE IF NOT EXISTS deployments (
     mysql_admin_login   VARCHAR(100) NOT NULL DEFAULT 'wordpressdb',
     mysql_admin_password_ref VARCHAR(255) NOT NULL DEFAULT '',  -- Vaultwarden item ID of plaintext (tijdelijk)
 
-    -- Azure SP credentials – Vaultwarden item ID refs (of plaintext, tijdelijk)
-    arm_client_id_ref       VARCHAR(255) NOT NULL DEFAULT '',
-    arm_client_secret_ref   VARCHAR(255) NOT NULL DEFAULT '',
-    arm_tenant_id_ref       VARCHAR(255) NOT NULL DEFAULT '',
-
     -- Terraform outputs (ingevuld na apply)
     tf_public_ip        VARCHAR(50)  NOT NULL DEFAULT '',
     tf_public_fqdn      VARCHAR(255) NOT NULL DEFAULT '',
