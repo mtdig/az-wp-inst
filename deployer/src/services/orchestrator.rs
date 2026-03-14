@@ -143,12 +143,19 @@ impl Orchestrator {
 
     /// Bouw de Ansible environment JSON voor deze deployment.
     fn build_ansible_env(d: &Deployment) -> serde_json::Value {
+        // Gebruik het IP-adres als ansible_host, maar val terug op de FQDN als
+        // het IP onbekend is (bv. wanneer TF outputs niet geparsed konden worden).
+        let ansible_host = if d.tf_public_ip.is_empty() {
+            &d.tf_public_fqdn
+        } else {
+            &d.tf_public_ip
+        };
         json!({
             "tf_public_fqdn": d.tf_public_fqdn,
             "tf_mysql_fqdn": d.tf_mysql_fqdn,
             "tf_mysql_admin_login": d.mysql_admin_login,
             "db_admin_password": d.mysql_admin_password_ref,
-            "ansible_host": d.tf_public_ip,
+            "ansible_host": ansible_host,
             "db_wp_password": d.db_wp_password_ref,
             "wp_admin_password": d.wp_admin_password_ref,
             "ansible_become_password": d.ansible_become_password_ref,
@@ -213,10 +220,15 @@ impl Orchestrator {
             .context("Key 'Geen' niet gevonden in Semaphore")?;
 
         let existing_id = d.sem_inventory_id.map(|v| v as i64);
+        let ansible_host = if d.tf_public_ip.is_empty() {
+            &d.tf_public_fqdn
+        } else {
+            &d.tf_public_ip
+        };
         let inventory_content = format!(
-            "[webservers]\n{fqdn} ansible_host={ip} ansible_become_password={become_pw}",
+            "[webservers]\n{fqdn} ansible_host={host} ansible_become_password={become_pw}",
             fqdn = d.tf_public_fqdn,
-            ip = d.tf_public_ip,
+            host = ansible_host,
             become_pw = d.ansible_become_password_ref,
         );
 
@@ -327,19 +339,38 @@ impl Orchestrator {
         let admin_user = Self::extract_tf_output(&full_output, "admin_username")
             .unwrap_or_else(|| "osboxes".to_string());
 
-        if let (Some(ip), Some(fqdn), Some(mysql_fqdn)) = (ip, fqdn, mysql_fqdn) {
-            self.save_tf_outputs(deploy_id, &ip, &fqdn, &mysql_fqdn, &admin_user)
-                .await?;
-            self.set_status(deploy_id, DeploymentStatus::Provisioned)
-                .await?;
+        // Fallback: bereken deterministische outputs uit formuliervelden
+        // (bv. bij "No changes" herhaalde apply worden outputs niet geprint)
+        let (final_ip, final_fqdn, final_mysql) = if fqdn.is_some() && mysql_fqdn.is_some() {
+            (
+                ip.unwrap_or_default(),
+                fqdn.unwrap(),
+                mysql_fqdn.unwrap(),
+            )
         } else {
-            tracing::warn!(
-                "Kon Terraform outputs niet parsen voor {deploy_id}, probeer handmatig"
+            let d = self.get_deployment(deploy_id).await?;
+            let fb_fqdn = format!(
+                "{}.francecentral.cloudapp.azure.com",
+                d.public_ip_dns_label
             );
-            // Nog steeds als provisioned markeren – outputs kunnen later via TF output worden opgehaald
-            self.set_status(deploy_id, DeploymentStatus::Provisioned)
-                .await?;
-        }
+            let fb_mysql = format!(
+                "{}.mysql.database.azure.com",
+                d.mysql_server_name
+            );
+            tracing::warn!(
+                "Kon Terraform outputs niet parsen voor {deploy_id}, gebruik fallback: fqdn={fb_fqdn}, mysql={fb_mysql}"
+            );
+            (
+                ip.unwrap_or_default(),
+                fqdn.unwrap_or(fb_fqdn),
+                mysql_fqdn.unwrap_or(fb_mysql),
+            )
+        };
+
+        self.save_tf_outputs(deploy_id, &final_ip, &final_fqdn, &final_mysql, &admin_user)
+            .await?;
+        self.set_status(deploy_id, DeploymentStatus::Provisioned)
+            .await?;
 
         Ok(())
     }
