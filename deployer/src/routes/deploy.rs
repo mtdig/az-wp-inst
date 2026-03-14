@@ -87,7 +87,10 @@ async fn get_deployment_for_user(
     .bind(&user_id)
     .fetch_optional(&state.db)
     .await
-    .map_err(|_| StatusCode::INTERNAL_SERVER_ERROR.into_response())?
+    .map_err(|e| {
+        tracing::error!("DB query fout voor deployment {deploy_id}: {e}");
+        StatusCode::INTERNAL_SERVER_ERROR.into_response()
+    })?
     .ok_or_else(|| StatusCode::NOT_FOUND.into_response())
 }
 

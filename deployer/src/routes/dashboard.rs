@@ -30,7 +30,10 @@ pub async fn index(State(state): State<AppState>, session: Session) -> impl Into
     .bind(&user_id)
     .fetch_all(&state.db)
     .await
-    .unwrap_or_default();
+    .unwrap_or_else(|e| {
+        tracing::error!("Dashboard deployments query fout: {e}");
+        vec![]
+    });
 
     HtmlTemplate(DashboardTemplate {
         base: state.base_path,
