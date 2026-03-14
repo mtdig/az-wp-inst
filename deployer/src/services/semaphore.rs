@@ -68,10 +68,23 @@ pub struct KeyResponse {
     pub key_type: String,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TemplateResponse {
     pub id: i64,
     pub name: String,
+    pub project_id: i64,
+    pub inventory_id: i64,
+    pub repository_id: i64,
+    pub environment_id: i64,
+    pub playbook: String,
+    #[serde(default)]
+    pub app: String,
+    #[serde(default)]
+    pub description: Option<String>,
+    #[serde(default)]
+    pub allow_override_args_in_task: bool,
+    #[serde(default)]
+    pub view_id: Option<i64>,
 }
 
 #[derive(Debug, Serialize)]
@@ -250,6 +263,58 @@ impl SemaphoreClient {
     pub async fn find_template_id(&self, name: &str) -> Result<Option<i64>> {
         let templates = self.list_templates().await?;
         Ok(templates.into_iter().find(|t| t.name == name).map(|t| t.id))
+    }
+
+    /// Haal een template op.
+    pub async fn get_template(&self, id: i64) -> Result<TemplateResponse> {
+        let resp = self
+            .authed(self.client.get(self.proj(&format!("/templates/{id}"))))
+            .send()
+            .await?;
+        if !resp.status().is_success() {
+            let status = resp.status();
+            let body = resp.text().await.unwrap_or_default();
+            anyhow::bail!("get_template {status}: {body}");
+        }
+        Ok(resp.json().await?)
+    }
+
+    /// Wijzig de environment_id van een template.
+    pub async fn update_template_environment(&self, template_id: i64, environment_id: i64) -> Result<()> {
+        let mut tpl = self.get_template(template_id).await?;
+        tpl.environment_id = environment_id;
+        self.put_template(template_id, &tpl).await
+    }
+
+    /// Wijzig de environment_id en inventory_id van een template.
+    pub async fn update_template_env_and_inventory(
+        &self,
+        template_id: i64,
+        environment_id: i64,
+        inventory_id: i64,
+    ) -> Result<()> {
+        let mut tpl = self.get_template(template_id).await?;
+        tpl.environment_id = environment_id;
+        tpl.inventory_id = inventory_id;
+        self.put_template(template_id, &tpl).await
+    }
+
+    /// PUT een template terug naar Semaphore.
+    async fn put_template(&self, template_id: i64, tpl: &TemplateResponse) -> Result<()> {
+        let resp = self
+            .authed(
+                self.client
+                    .put(self.proj(&format!("/templates/{template_id}")))
+            )
+            .json(tpl)
+            .send()
+            .await?;
+        if !resp.status().is_success() {
+            let status = resp.status();
+            let body = resp.text().await.unwrap_or_default();
+            anyhow::bail!("put_template {status}: {body}");
+        }
+        Ok(())
     }
 
     //  Tasks 

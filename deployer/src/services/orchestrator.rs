@@ -257,7 +257,12 @@ impl Orchestrator {
             .await?
             .context("Terraform apply template niet gevonden")?;
 
-        // 4. Start de task met auto_approve
+        // 4. Wijs de template naar onze per-deployment TF environment
+        self.sem
+            .update_template_environment(template_id, tf_env_id)
+            .await?;
+
+        // 5. Start de task met auto_approve
         let task = self
             .sem
             .run_task(RunTaskBody {
@@ -381,7 +386,12 @@ impl Orchestrator {
             .await?
             .context("Ansible deploy template niet gevonden")?;
 
-        // 5. Start task
+        // 5. Wijs de template naar onze per-deployment Ansible environment + inventory
+        self.sem
+            .update_template_env_and_inventory(template_id, env_id, inv_id)
+            .await?;
+
+        // 6. Start task
         let task = self
             .sem
             .run_task(RunTaskBody {
@@ -456,6 +466,11 @@ impl Orchestrator {
             .find_template_id("💥 Infrastructuur vernietigen (destroy)")
             .await?
             .context("Terraform destroy template niet gevonden")?;
+
+        // Wijs de template naar onze per-deployment TF environment
+        self.sem
+            .update_template_environment(template_id, tf_env_id)
+            .await?;
 
         let task = self
             .sem
