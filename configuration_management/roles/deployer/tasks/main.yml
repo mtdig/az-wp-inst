@@ -101,7 +101,7 @@
   shell: |
     mysql -h {{ wp_db_host }} -P {{ wp_db_port | default(3306) }} \
       -u deployer -p'{{ deployer_db_password }}' \
-      --ssl deployer -e \
+      --ssl-mode=REQUIRED deployer -e \
       "INSERT IGNORE INTO users (id, username, full_name, password, is_admin)
        VALUES ('{{ deployer_admin_id }}', '{{ deployer_admin_user }}', '{{ deployer_admin_full_name }}', '{{ deployer_admin_password_hash }}', 1);"
   changed_when: false
