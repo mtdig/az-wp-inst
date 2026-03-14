@@ -1,0 +1,154 @@
+{% extends "base.html" %}
+
+{% block title %}{{ deployment.name }}{% endblock %}
+
+{% block nav_right %}
+<a href="/" class="btn btn-ghost btn-sm">← Dashboard</a>
+{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Header -->
+    <div class="flex items-center justify-between">
+        <div>
+            <h1 class="text-3xl font-bold">{{ deployment.name }}</h1>
+            <p class="text-sm opacity-60 mt-1">{{ deployment.resource_group_name }}</p>
+        </div>
+        <div id="status-badge"
+             hx-get="/deploy/{{ deployment.id }}/status"
+             hx-trigger="every 5s"
+             hx-swap="innerHTML">
+            {% include "partials/status_badge.html" %}
+        </div>
+    </div>
+
+    <!-- Info cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="card bg-base-100 shadow">
+            <div class="card-body">
+                <h3 class="card-title text-sm uppercase tracking-wider opacity-60">Azure</h3>
+                <dl class="space-y-1 text-sm">
+                    <div class="flex justify-between">
+                        <dt class="opacity-60">Subscription</dt>
+                        <dd class="font-mono text-xs">{{ deployment.subscription_id }}</dd>
+                    </div>
+                    <div class="flex justify-between">
+                        <dt class="opacity-60">Resource Group</dt>
+                        <dd>{{ deployment.resource_group_name }}</dd>
+                    </div>
+                    <div class="flex justify-between">
+                        <dt class="opacity-60">DNS Label</dt>
+                        <dd>{{ deployment.public_ip_dns_label }}</dd>
+                    </div>
+                    <div class="flex justify-between">
+                        <dt class="opacity-60">MySQL Server</dt>
+                        <dd>{{ deployment.mysql_server_name }}</dd>
+                    </div>
+                </dl>
+            </div>
+        </div>
+
+        <div class="card bg-base-100 shadow">
+            <div class="card-body">
+                <h3 class="card-title text-sm uppercase tracking-wider opacity-60">Outputs</h3>
+                {% if deployment.tf_public_ip.is_empty() %}
+                <p class="text-sm opacity-40 italic">Nog niet geprovisioned</p>
+                {% else %}
+                <dl class="space-y-1 text-sm">
+                    <div class="flex justify-between">
+                        <dt class="opacity-60">Publiek IP</dt>
+                        <dd class="font-mono">{{ deployment.tf_public_ip }}</dd>
+                    </div>
+                    <div class="flex justify-between">
+                        <dt class="opacity-60">FQDN</dt>
+                        <dd>
+                            <a href="https://{{ deployment.tf_public_fqdn }}" target="_blank"
+                               class="link link-primary">{{ deployment.tf_public_fqdn }}</a>
+                        </dd>
+                    </div>
+                    <div class="flex justify-between">
+                        <dt class="opacity-60">MySQL FQDN</dt>
+                        <dd class="font-mono text-xs">{{ deployment.tf_mysql_fqdn }}</dd>
+                    </div>
+                </dl>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Acties -->
+    <div class="card bg-base-100 shadow">
+        <div class="card-body">
+            <h3 class="card-title">Acties</h3>
+            <div class="flex flex-wrap gap-3 mt-2">
+                {% match deployment.status %}
+                {% when DeploymentStatus::Draft %}
+                <button class="btn btn-primary"
+                        hx-post="/deploy/{{ deployment.id }}/provision"
+                        hx-target="#status-badge"
+                        hx-swap="innerHTML">
+                    🚀 Infrastructuur aanmaken
+                </button>
+                {% when DeploymentStatus::Provisioned %}
+                <button class="btn btn-primary"
+                        hx-post="/deploy/{{ deployment.id }}/configure"
+                        hx-target="#status-badge"
+                        hx-swap="innerHTML">
+                    ⚙️ Stack configureren
+                </button>
+                <button class="btn btn-error btn-outline"
+                        hx-post="/deploy/{{ deployment.id }}/destroy"
+                        hx-target="#status-badge"
+                        hx-swap="innerHTML"
+                        hx-confirm="Weet je zeker dat je alle resources wilt vernietigen?">
+                    💥 Vernietigen
+                </button>
+                {% when DeploymentStatus::Ready %}
+                <a href="https://{{ deployment.tf_public_fqdn }}" target="_blank"
+                   class="btn btn-success">
+                    🌐 Open WordPress
+                </a>
+                <button class="btn btn-warning btn-outline"
+                        hx-post="/deploy/{{ deployment.id }}/configure"
+                        hx-target="#status-badge"
+                        hx-swap="innerHTML">
+                    🔄 Herconfigureren
+                </button>
+                <button class="btn btn-error btn-outline"
+                        hx-post="/deploy/{{ deployment.id }}/destroy"
+                        hx-target="#status-badge"
+                        hx-swap="innerHTML"
+                        hx-confirm="Weet je zeker dat je alle resources wilt vernietigen?">
+                    💥 Vernietigen
+                </button>
+                {% when DeploymentStatus::Failed %}
+                <button class="btn btn-warning"
+                        hx-post="/deploy/{{ deployment.id }}/provision"
+                        hx-target="#status-badge"
+                        hx-swap="innerHTML">
+                    🔄 Opnieuw proberen
+                </button>
+                {% when _ %}
+                <p class="text-sm opacity-60 italic">Bewerking bezig, even geduld…</p>
+                {% endmatch %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Task output -->
+    {% if deployment.sem_last_task_id.is_some() %}
+    <div class="card bg-base-100 shadow">
+        <div class="card-body">
+            <h3 class="card-title">Laatste taak output</h3>
+            <div id="task-output"
+                 class="bg-base-300 rounded-lg p-4 font-mono text-xs max-h-96 overflow-y-auto whitespace-pre-wrap"
+                 hx-get="/deploy/{{ deployment.id }}/output"
+                 hx-trigger="load, every 3s"
+                 hx-swap="innerHTML">
+                Laden…
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

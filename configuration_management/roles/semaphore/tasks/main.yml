@@ -78,6 +78,15 @@
     ca_cert: /etc/ssl/certs/ca-certificates.crt
     check_hostname: false
 
+- name: Semaphore directories aanmaken
+  file:
+    path: "{{ item }}"
+    state: directory
+    mode: "0755"
+  loop:
+    - /opt/semaphore
+    - /opt/semaphore/config
+
 # --- Semaphore SSH keypair ---
 # Genereert een dedicated SSH keypair waarmee de Semaphore container
 # (via Docker) terug kan SSHen naar de host VM.
@@ -112,15 +121,6 @@
   register: sem_ssh_private_key
 
 # --- Semaphore container ---
-
-- name: Semaphore directories aanmaken
-  file:
-    path: "{{ item }}"
-    state: directory
-    mode: "0755"
-  loop:
-    - /opt/semaphore
-    - /opt/semaphore/config
 
 - name: Access key encryption sleutel genereren
   shell: head -c32 /dev/urandom | base64

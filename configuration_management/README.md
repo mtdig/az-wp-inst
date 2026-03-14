@@ -175,15 +175,15 @@ uv run ansible-playbook playbooks/site.yml -v
 
 ```
 .
-├── ansible.cfg          # Ansible configuratie
-├── inventory.yml        # Host definities
-├── ../user_vars.tfvars.json  # Gecentraliseerde user variabelen (root, niet in git)
-├── playbooks/
-│   └── site.yml         # Hoofdplaybook
-└── roles/
-    ├── common/          # SSH, UFW, fail2ban, neofetch
-    ├── mysql_client/    # Azure MySQL client, DB & user provisioning
-    └── wordpress/       # Apache, PHP, WordPress
+├ ansible.cfg          # Ansible configuratie
+├ inventory.yml        # Host definities
+├ ../user_vars.tfvars.json  # Gecentraliseerde user variabelen (root, niet in git)
+├ playbooks/
+│   └ site.yml         # Hoofdplaybook
+└ roles/
+    ├ common/          # SSH, UFW, fail2ban, neofetch
+    ├ mysql_client/    # Azure MySQL client, DB & user provisioning
+    └ wordpress/       # Apache, PHP, WordPress
 ```
 
 ## Na installatie

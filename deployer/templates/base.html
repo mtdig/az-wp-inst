@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="nl" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Deployer{% endblock %} – Groep 99</title>
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@5/themes.css" rel="stylesheet" type="text/css" />
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@5/full.css" rel="stylesheet" type="text/css" />
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="https://unpkg.com/htmx.org@2.0.4"></script>
+</head>
+<body class="min-h-screen bg-base-200">
+    {% block nav %}
+    <nav class="navbar bg-base-100 shadow-md px-6">
+        <div class="flex-1">
+            <a href="/" class="text-xl font-bold text-primary">🚀 Deployer</a>
+            <span class="ml-2 text-sm opacity-60">Groep 99</span>
+        </div>
+        <div class="flex-none">
+            {% block nav_right %}{% endblock %}
+        </div>
+    </nav>
+    {% endblock %}
+
+    <main class="container mx-auto px-4 py-8 max-w-4xl">
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="footer footer-center p-4 text-base-content/60">
+        <p>SELab Opdracht 4 – WordPress op Azure</p>
+    </footer>
+</body>
+</html>

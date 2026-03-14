@@ -113,13 +113,13 @@ make apply SSH_KEY=~/.ssh/mijn_andere_sleutel
 ```
 make all
   │
-  ├─ make apply          ← Terraform maakt Azure resources aan
-  │   └─ outputs: public_ip_address, mysql_fqdn, admin_username, …
+  ├ make apply          ← Terraform maakt Azure resources aan
+  │   └ outputs: public_ip_address, mysql_fqdn, admin_username, …
   │
-  └─ make configure      ← Ansible configureert de VM
-      ├─ leest automatisch Terraform outputs
-      ├─ verbindt via SSH naar het publieke IP van de VM
-      └─ geeft MySQL FQDN + admin login door als extra vars
+  └ make configure      ← Ansible configureert de VM
+      ├ leest automatisch Terraform outputs
+      ├ verbindt via SSH naar het publieke IP van de VM
+      └ geeft MySQL FQDN + admin login door als extra vars
 ```
 
 Terraform outputs worden bij configure-time gelezen en via `-e` extra vars en dynamische inventory in de Ansible run geïnjecteerd. Geen handmatig kopiëren van IPs of hostnamen nodig.
@@ -128,47 +128,47 @@ Terraform outputs worden bij configure-time gelezen en via `-e` extra vars en dy
 
 ```
 opdracht4/
-├── Makefile                     # Orkestreeert alles
-├── terraform.tfvars.json        # Azure & MySQL configuratie
-├── ansible_vars.json            # Ansible/WordPress configuratie
-├── .gitignore
-├── flake.nix                    # NixOS dev shell
-├── pyproject.toml / uv.lock    # Python/Ansible dependencies
+├ Makefile                     # Orkestreeert alles
+├ terraform.tfvars.json        # Azure & MySQL configuratie
+├ ansible_vars.json            # Ansible/WordPress configuratie
+├ .gitignore
+├ flake.nix                    # NixOS dev shell
+├ pyproject.toml / uv.lock    # Python/Ansible dependencies
 │
-├── config-starter/              # TUI configuratie generator (Go)
-│   ├── main.go
-│   ├── Makefile
-│   └── version.txt
+├ config-starter/              # TUI configuratie generator (Go)
+│   ├ main.go
+│   ├ Makefile
+│   └ version.txt
 │
-├── provisioning/                # Terraform root
-│   ├── main.tf
-│   ├── variables.tf
-│   ├── outputs.tf
-│   ├── terraform.tfvars
-│   ├── README.md
-│   └── modules/
-│       ├── network/             # VNet, Subnet, NSG, Publiek IP, NIC
-│       ├── compute/             # Ubuntu VM + auto-shutdown
-│       └── database/            # MySQL Flexible Server + firewallregels
+├ provisioning/                # Terraform root
+│   ├ main.tf
+│   ├ variables.tf
+│   ├ outputs.tf
+│   ├ terraform.tfvars
+│   ├ README.md
+│   └ modules/
+│       ├ network/             # VNet, Subnet, NSG, Publiek IP, NIC
+│       ├ compute/             # Ubuntu VM + auto-shutdown
+│       └ database/            # MySQL Flexible Server + firewallregels
 │
-├── configuration_management/    # Ansible root
-│   ├── ansible.cfg
-│   ├── inventory.yml
-│   ├── vault.yml                # encrypted secrets (voor deze opdracht niet encrypted)
-│   ├── README.md
-│   ├── playbooks/
-│   │   └── site.yml
-│   └── roles/
-│       ├── common/              # SSH, UFW, fail2ban
-│       ├── mysql_client/        # MySQL client, remote DB/gebruiker aanmaak
-│       ├── wordpress/           # Apache, PHP, WordPress, WP-CLI
-│       ├── vaultwarden/          # Vaultwarden wachtwoordkluis (Docker, /secrets)
-│       ├── semaphore/           # Semaphore UI deployment dashboard (Docker, /deploy)
-│       └── tech_snake/          # snake game (/snake)
+├ configuration_management/    # Ansible root
+│   ├ ansible.cfg
+│   ├ inventory.yml
+│   ├ vault.yml                # encrypted secrets (voor deze opdracht niet encrypted)
+│   ├ README.md
+│   ├ playbooks/
+│   │   └ site.yml
+│   └ roles/
+│       ├ common/              # SSH, UFW, fail2ban
+│       ├ mysql_client/        # MySQL client, remote DB/gebruiker aanmaak
+│       ├ wordpress/           # Apache, PHP, WordPress, WP-CLI
+│       ├ vaultwarden/          # Vaultwarden wachtwoordkluis (Docker, /secrets)
+│       ├ semaphore/           # Semaphore UI deployment dashboard (Docker, /deploy)
+│       └ tech_snake/          # snake game (/snake)
 │
-└── devops/                      # Originele ARM templates (ter referentie)
-    ├── mysql/
-    └── ubuntu/
+└ devops/                      # Originele ARM templates (ter referentie)
+    ├ mysql/
+    └ ubuntu/
 ```
 
 ## Optionele componenten

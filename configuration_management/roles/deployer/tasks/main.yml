@@ -1,0 +1,150 @@
+---
+# Deployer webapp – Rust binary als systemd service met Apache reverse proxy
+#
+# De binary wordt gebouwd door GitHub Actions (x86_64-linux) en
+# gedownload van de GitHub Release bij deployment.
+#
+# Vereisten:
+#   - GitHub Release met deployer binary (zie .github/workflows/release-deployer.yml)
+#   - MySQL database op de Semaphore Docker MySQL instance
+#   - Apache al geïnstalleerd (door WordPress role)
+#
+# Variabelen: zie defaults/main.yml
+
+- name: Deployer-gebruiker aanmaken
+  user:
+    name: deployer
+    system: true
+    shell: /usr/sbin/nologin
+    home: /opt/deployer
+    create_home: false
+
+- name: Deployer-mappen aanmaken
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: deployer
+    group: deployer
+    mode: "0755"
+  loop:
+    - /opt/deployer
+    - /opt/deployer/static
+    - /opt/deployer/templates
+    - /opt/deployer/templates/partials
+    - /opt/deployer/migrations
+
+- name: Deployer binary downloaden van GitHub release
+  get_url:
+    url: "{{ deployer_release_url }}"
+    dest: /opt/deployer/deployer
+    owner: deployer
+    group: deployer
+    mode: "0755"
+    force: true
+  notify: Deployer herstarten
+
+- name: Deployer HTML templates kopiëren
+  copy:
+    src: "{{ deployer_src_dir }}/templates/"
+    dest: /opt/deployer/templates/
+    owner: deployer
+    group: deployer
+    mode: "0644"
+    directory_mode: "0755"
+  notify: Deployer herstarten
+
+- name: Deployer migraties kopiëren
+  copy:
+    src: "{{ deployer_src_dir }}/migrations/"
+    dest: /opt/deployer/migrations/
+    owner: deployer
+    group: deployer
+    mode: "0644"
+    directory_mode: "0755"
+  notify: Deployer herstarten
+
+- name: Deployer .env configuratie
+  template:
+    src: deployer.env.j2
+    dest: /opt/deployer/.env
+    owner: deployer
+    group: deployer
+    mode: "0600"
+  notify: Deployer herstarten
+
+- name: MySQL deployer database aanmaken
+  community.mysql.mysql_db:
+    name: deployer
+    state: present
+    login_host: "127.0.0.1"
+    login_user: root
+    login_password: "{{ semaphore_mysql_root_password | default('semaphore') }}"
+  ignore_errors: true
+
+- name: MySQL deployer gebruiker aanmaken
+  community.mysql.mysql_user:
+    name: deployer
+    password: "{{ deployer_db_password }}"
+    host: "%"
+    priv: "deployer.*:ALL"
+    login_host: "127.0.0.1"
+    login_user: root
+    login_password: "{{ semaphore_mysql_root_password | default('semaphore') }}"
+    state: present
+  ignore_errors: true
+
+- name: Seed admin user als die nog niet bestaat
+  shell: |
+    mysql -h 127.0.0.1 -u deployer -p'{{ deployer_db_password }}' deployer -e \
+      "INSERT IGNORE INTO users (id, username, full_name, password, is_admin)
+       VALUES ('{{ deployer_admin_id }}', '{{ deployer_admin_user }}', '{{ deployer_admin_full_name }}', '{{ deployer_admin_password_hash }}', 1);"
+  changed_when: false
+  ignore_errors: true
+
+- name: Deployer systemd service installeren
+  template:
+    src: deployer.service.j2
+    dest: /etc/systemd/system/deployer.service
+    mode: "0644"
+  notify:
+    - Systemd herladen
+    - Deployer herstarten
+
+- name: Deployer service inschakelen en starten
+  systemd:
+    name: deployer
+    enabled: true
+    state: started
+
+# --- Apache reverse proxy ---
+
+- name: Apache proxy modules inschakelen
+  apache2_module:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - proxy
+    - proxy_http
+  notify: Apache herstarten
+
+- name: Apache reverse proxy configuratie voor Deployer
+  template:
+    src: deployer.conf.j2
+    dest: /etc/apache2/conf-available/deployer.conf
+  notify: Apache herstarten
+
+- name: Deployer Apache configuratie inschakelen
+  file:
+    src: /etc/apache2/conf-available/deployer.conf
+    dest: /etc/apache2/conf-enabled/deployer.conf
+    state: link
+  notify: Apache herstarten
+
+- name: Wacht tot Deployer draait
+  uri:
+    url: "http://127.0.0.1:{{ deployer_port }}/login"
+    status_code: 200
+  register: deployer_health
+  retries: 10
+  delay: 3
+  until: deployer_health.status == 200

@@ -81,6 +81,7 @@ type AnsibleVars struct {
 	VaultwardenAdminToken string `json:"vaultwarden_admin_token,omitempty"`
 	EnableTechSnake       bool   `json:"enable_tech_snake"`
 	EnableSemaphore       bool   `json:"enable_semaphore"`
+	EnableDeployer        bool   `json:"enable_deployer"`
 	SemaphoreAdminUser    string `json:"semaphore_admin_user,omitempty"`
 	SemaphoreAdminPass    string `json:"semaphore_admin_password,omitempty"`
 
@@ -140,7 +141,7 @@ func asciiLogo() string {
 }
 
 func subtitle() string {
-	return fmt.Sprintf("C O N F I G U R A T I E   G E N E R A T O R   %s\n           Groep 99  ─  SELab Opdracht 4", version)
+	return fmt.Sprintf("C O N F I G U R A T I E   G E N E R A T O R   %s\n           Groep 99    SELab Opdracht 4", version)
 }
 
 // huh theme
@@ -363,7 +364,7 @@ func (m model) renderHeader(innerW int) string {
 func (m model) renderSep(innerW int) string {
 	return lipgloss.NewStyle().
 		Foreground(borderCl).
-		Render(strings.Repeat("─", innerW))
+		Render(strings.Repeat("", innerW))
 }
 
 // onderrand met versie links en hint-tekst in het midden
@@ -738,6 +739,10 @@ func main() {
 				Title("Semaphore UI").
 				Description("deployment dashboard voor teamleden (/deploy)").
 				Value(&ans.EnableSemaphore),
+			huh.NewConfirm().
+				Title("Deployer Webapp").
+				Description("multi-tenant deployer op /app/ (vereist Semaphore)").
+				Value(&ans.EnableDeployer),
 			huh.NewInput().
 				Title("Semaphore Admin Gebruiker").
 				Description("login gebruikersnaam voor Semaphore UI").

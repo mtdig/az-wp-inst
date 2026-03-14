@@ -1,0 +1,26 @@
+[Unit]
+Description=Deployer webapp
+After=network.target mysql.service docker.service
+
+[Service]
+Type=simple
+User=deployer
+Group=deployer
+WorkingDirectory=/opt/deployer
+EnvironmentFile=/opt/deployer/.env
+ExecStart=/opt/deployer/deployer
+Restart=on-failure
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=deployer
+
+# Hardening
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/deployer
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

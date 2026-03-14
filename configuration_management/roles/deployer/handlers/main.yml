@@ -1,0 +1,14 @@
+---
+- name: Systemd herladen
+  systemd:
+    daemon_reload: true
+
+- name: Deployer herstarten
+  systemd:
+    name: deployer
+    state: restarted
+
+- name: Apache herstarten
+  service:
+    name: apache2
+    state: restarted

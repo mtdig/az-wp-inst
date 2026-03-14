@@ -69,13 +69,13 @@ configure: ## Ansible playbook uitvoeren met Terraform outputs
 	$(eval MYSQL_FQDN     := $(call tf_output,mysql_fqdn))
 	$(eval MYSQL_ADMIN     := $(call tf_output,mysql_admin_login))
 	$(eval PUBLIC_FQDN    := $(call tf_output,public_fqdn))
-	@echo "──────────────────────────────────────────────"
+	@echo ""
 	@echo "  VM IP         : $(VM_IP)"
 	@echo "  Admin user    : $(ADMIN_USER)"
 	@echo "  Public FQDN   : $(PUBLIC_FQDN)"
 	@echo "  MySQL FQDN    : $(MYSQL_FQDN)"
 	@echo "  MySQL admin   : $(MYSQL_ADMIN)"
-	@echo "──────────────────────────────────────────────"
+	@echo ""
 	cd $(ANSIBLE_DIR) && uv run ansible-playbook playbooks/site.yml \
 		-i "$(VM_IP)," \
 		-u "$(ADMIN_USER)" \
@@ -86,6 +86,21 @@ configure: ## Ansible playbook uitvoeren met Terraform outputs
 		-e "tf_mysql_fqdn=$(MYSQL_FQDN)" \
 		-e "tf_mysql_admin_login=$(MYSQL_ADMIN)" \
 		-e "db_admin_password=$$(jq -r .mysql_admin_password $(TF_VARS_FILE))"
+
+# ---------------------------------------------------------------------------
+# Deployer webapp (Rust) – binary wordt gebouwd door GitHub Actions
+# ---------------------------------------------------------------------------
+build-deployer: ## Deployer webapp bouwen (lokaal, dev only)
+	cd deployer && cargo build --release
+
+release-deployer: ## Deployer release triggeren (bump version.txt → push → GH Actions)
+	@echo "Huidige versie: $$(cat deployer/version.txt)"
+	@read -rp "Nieuwe versie (bv. v0.2.0): " V && \
+		echo "$$V" > deployer/version.txt && \
+		git add deployer/version.txt && \
+		git commit -m "deployer: bump versie naar $$V" && \
+		git push && \
+		echo "✓ Push gedaan — GitHub Actions bouwt de release"
 
 # ---------------------------------------------------------------------------
 # Gecombineerde targets

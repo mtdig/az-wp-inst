@@ -30,6 +30,8 @@
       when: enable_tech_snake | default(false) | bool
     - role: semaphore
       when: enable_semaphore | default(false) | bool
+    - role: deployer
+      when: enable_deployer | default(false) | bool
 
   post_tasks:
     - name: Toon verbindingsinformatie
@@ -46,6 +48,7 @@
           - "{{ 'Tech Snake:        https://' + wp_domain + '/snake' if (enable_tech_snake | default(false) | bool) else '' }}"
           - "{{ 'Semaphore UI:      https://' + wp_domain + '/deploy' if (enable_semaphore | default(false) | bool) else '' }}"
           - "{{ 'Semaphore Login:   admin / ' + semaphore_admin_password if (enable_semaphore | default(false) | bool) else '' }}"
+          - "{{ 'Deployer:          https://' + wp_domain + '/app/' if (enable_deployer | default(false) | bool) else '' }}"
           - "=========================================="
 
 - name: Lokale SSH config bijwerken

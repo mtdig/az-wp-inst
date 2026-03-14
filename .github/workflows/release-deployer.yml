@@ -1,0 +1,63 @@
+# =============================================================================
+#  GitHub Actions – Deployer release
+#  Bouwt de Rust binary (x86_64-linux) en publiceert een GitHub Release
+#  wanneer deployer/version.txt wijzigt op feat/semaphore-ui
+# =============================================================================
+
+name: Release deployer
+
+on:
+  push:
+    branches: [feat/semaphore-ui]
+    paths:
+      - deployer/version.txt
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: deployer
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Versie inlezen
+        id: version
+        run: echo "VERSION=$(cat version.txt)" >> "$GITHUB_OUTPUT"
+
+      - name: Rust toolchain installeren
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cargo cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            deployer/target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('deployer/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-
+
+      - name: Release binary bouwen
+        run: cargo build --release
+
+      - name: Binary strippen (kleiner)
+        run: strip target/release/deployer
+
+      - name: Binary grootte tonen
+        run: ls -lh target/release/deployer
+
+      - name: GitHub Release aanmaken
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: deployer-${{ steps.version.outputs.VERSION }}
+          name: Deployer ${{ steps.version.outputs.VERSION }}
+          generate_release_notes: true
+          files: |
+            deployer/target/release/deployer

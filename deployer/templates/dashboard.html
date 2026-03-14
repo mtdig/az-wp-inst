@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block nav_right %}
+<span class="mr-4 text-sm">{{ user_name }}</span>
+<a href="/logout" class="btn btn-ghost btn-sm">Uitloggen</a>
+{% endblock %}
+
+{% block content %}
+<div class="flex items-center justify-between mb-6">
+    <h1 class="text-3xl font-bold">Mijn Deployments</h1>
+    <a href="/deploy/new" class="btn btn-primary">
+        + Nieuwe Deployment
+    </a>
+</div>
+
+{% if deployments.is_empty() %}
+<div class="card bg-base-100 shadow">
+    <div class="card-body items-center text-center py-16">
+        <h2 class="text-xl opacity-60 mb-2">Nog geen deployments</h2>
+        <p class="opacity-40 mb-4">Maak een nieuwe deployment aan om je WordPress stack op Azure te bouwen.</p>
+        <a href="/deploy/new" class="btn btn-primary">Aan de slag →</a>
+    </div>
+</div>
+{% else %}
+<div class="grid gap-4">
+    {% for d in &deployments %}
+    <a href="/deploy/{{ d.id }}" class="card bg-base-100 shadow hover:shadow-lg transition-shadow">
+        <div class="card-body flex-row items-center justify-between">
+            <div>
+                <h3 class="card-title text-lg">{{ d.name }}</h3>
+                <p class="text-sm opacity-60">
+                    {{ d.resource_group_name }}
+                    {% if !d.tf_public_fqdn.is_empty() %}
+                     · {{ d.tf_public_fqdn }}
+                    {% endif %}
+                </p>
+            </div>
+            <div class="badge {{ d.status.badge_class() }}">{{ d.status }}</div>
+        </div>
+    </a>
+    {% endfor %}
+</div>
+{% endif %}
+{% endblock %}

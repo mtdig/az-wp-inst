@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block title %}Inloggen{% endblock %}
+
+{% block nav %}{% endblock %}
+
+{% block content %}
+<div class="flex items-center justify-center min-h-[80vh]">
+    <div class="card bg-base-100 shadow-xl w-full max-w-md">
+        <div class="card-body">
+            <h2 class="card-title text-2xl mb-4">🚀 Deployer – Inloggen</h2>
+
+            {% if let Some(msg) = error %}
+            <div class="alert alert-error mb-4">
+                <span>{{ msg }}</span>
+            </div>
+            {% endif %}
+
+            <form method="POST" action="/login" class="space-y-4">
+                <div class="form-control">
+                    <label class="label" for="username">
+                        <span class="label-text">Gebruikersnaam</span>
+                    </label>
+                    <input type="text" id="username" name="username"
+                           class="input input-bordered w-full" required autofocus>
+                </div>
+
+                <div class="form-control">
+                    <label class="label" for="password">
+                        <span class="label-text">Wachtwoord</span>
+                    </label>
+                    <input type="password" id="password" name="password"
+                           class="input input-bordered w-full" required>
+                </div>
+
+                <button type="submit" class="btn btn-primary w-full">Inloggen</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

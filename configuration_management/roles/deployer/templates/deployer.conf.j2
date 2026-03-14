@@ -1,0 +1,7 @@
+ProxyPreserveHost On
+
+ProxyPass        /app/ http://127.0.0.1:{{ deployer_port | default(3001) }}/
+ProxyPassReverse /app/ http://127.0.0.1:{{ deployer_port | default(3001) }}/
+
+# Trailing-slash redirect
+RedirectMatch 301 ^/app$ /app/

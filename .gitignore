@@ -31,3 +31,8 @@ vault.yml
 config-starter/config-starter
 config-starter/bin/
 config-backup/
+
+# Rust / Deployer
+deployer/target/
+deployer/.env
+deployer/static/style.css

@@ -87,6 +87,7 @@
           "vaultwarden_admin_token": vaultwarden_admin_token | default(""),
           "enable_tech_snake": enable_tech_snake | default(false),
           "enable_semaphore": enable_semaphore | default(false),
+          "enable_deployer": enable_deployer | default(false),
           "semaphore_admin_user": semaphore_admin_user | default("admin"),
           "semaphore_admin_password": semaphore_admin_password,
           "ssh_host_alias": ssh_host_alias | default("azosboxes"),
@@ -261,7 +262,7 @@
           type: ""
           allow_override_args_in_task: true
           suppress_success_alerts: false
-          cli_args: "-e skip_common=true -e enable_vaultwarden=false -e enable_tech_snake=false -e enable_semaphore=false"
+          cli_args: "-e skip_common=true -e enable_vaultwarden=false -e enable_tech_snake=false -e enable_semaphore=false -e enable_deployer=false"
           survey_vars: []
         # -- Onderhoud view --
         - name: "🔒 Beveiliging bijwerken"
@@ -277,7 +278,7 @@
           type: ""
           allow_override_args_in_task: true
           suppress_success_alerts: false
-          cli_args: "-e enable_vaultwarden=false -e enable_tech_snake=false -e enable_semaphore=false -t common"
+          cli_args: "-e enable_vaultwarden=false -e enable_tech_snake=false -e enable_semaphore=false -e enable_deployer=false -t common"
           survey_vars: []
         - name: "📦 Systeem pakketten updaten"
           app: "ansible"

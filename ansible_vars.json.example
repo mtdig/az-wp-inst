@@ -19,6 +19,7 @@
   "vaultwarden_admin_token": "",
   "enable_tech_snake": false,
   "enable_semaphore": false,
+  "enable_deployer": false,
   "semaphore_admin_user": "admin",
   "semaphore_admin_password": "",
 
