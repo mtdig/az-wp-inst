@@ -266,7 +266,11 @@ impl SemaphoreClient {
     /// Vind een template op naam, geeft ID terug.
     pub async fn find_template_id(&self, name: &str) -> Result<Option<i64>> {
         let templates = self.list_templates().await?;
-        Ok(templates.into_iter().find(|t| t.name == name).map(|t| t.id))
+        let needle = name.trim();
+        Ok(templates
+            .into_iter()
+            .find(|t| t.name.contains(needle))
+            .map(|t| t.id))
     }
 
     /// Haal een template op.

@@ -271,7 +271,7 @@ impl Orchestrator {
         // 3. Zoek de "apply" template
         let template_id = self
             .sem
-            .find_template_id(" Infrastructuur aanmaken (apply)")
+            .find_template_id("Infrastructuur aanmaken (apply)")
             .await?
             .context("Terraform apply template niet gevonden")?;
 
@@ -419,7 +419,7 @@ impl Orchestrator {
         // 4. Zoek de "deploy" template
         let template_id = self
             .sem
-            .find_template_id(" Volledige stack deployen")
+            .find_template_id("Volledige stack deployen")
             .await?
             .context("Ansible deploy template niet gevonden")?;
 
@@ -500,7 +500,7 @@ impl Orchestrator {
 
         let template_id = self
             .sem
-            .find_template_id("💥 Infrastructuur vernietigen (destroy)")
+            .find_template_id("Infrastructuur vernietigen (destroy)")
             .await?
             .context("Terraform destroy template niet gevonden")?;
 
