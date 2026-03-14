@@ -69,10 +69,16 @@ async fn main() -> anyhow::Result<()> {
         ("003_add_admin_public_key", include_str!("../migrations/003_add_admin_public_key.sql")),
     ];
     for (name, sql) in migrations {
-        for statement in sql
+        // Strip lijn-commentaar (--) eerst, dan splitsen op ;
+        let cleaned: String = sql
+            .lines()
+            .filter(|line| !line.trim_start().starts_with("--"))
+            .collect::<Vec<_>>()
+            .join("\n");
+        for statement in cleaned
             .split(';')
             .map(str::trim)
-            .filter(|s| !s.is_empty() && !s.starts_with("--"))
+            .filter(|s| !s.is_empty())
         {
             if let Err(e) = sqlx::query(statement).execute(&pool).await {
                 // Duplicate column / table already exists → verwacht bij herstart
