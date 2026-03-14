@@ -104,6 +104,7 @@ impl Orchestrator {
         json!({
             "ARM_USE_MSI": "true",
             "ARM_SUBSCRIPTION_ID": d.subscription_id,
+            "ARM_TENANT_ID": std::env::var("ARM_TENANT_ID").unwrap_or_default(),
             "TF_VAR_subscription_id": d.subscription_id,
             "TF_VAR_admin_public_key": "",
             "TF_VAR_mysql_admin_password": d.mysql_admin_password_ref,

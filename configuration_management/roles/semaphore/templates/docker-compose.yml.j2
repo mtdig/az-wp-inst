@@ -3,6 +3,7 @@ services:
     image: semaphoreui/semaphore:latest
     container_name: semaphore
     restart: always
+    network_mode: host
     environment:
       SEMAPHORE_DB_DIALECT: mysql
       SEMAPHORE_DB_HOST: "{{ wp_db_host }}"
@@ -19,9 +20,5 @@ services:
       SEMAPHORE_ACCESS_KEY_ENCRYPTION: "{{ semaphore_access_key }}"
       SEMAPHORE_COOKIE_HASH: "{{ semaphore_cookie_hash }}"
       SEMAPHORE_WEB_ROOT: "https://{{ wp_domain }}/deploy"
-    ports:
-      - "127.0.0.1:3000:3000"
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
     volumes:
       - /opt/semaphore/data:/var/lib/semaphore
