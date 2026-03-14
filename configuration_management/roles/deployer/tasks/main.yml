@@ -71,16 +71,6 @@
     ca_cert: /etc/ssl/certs/ca-certificates.crt
     check_hostname: false
 
-- name: Seed admin user als die nog niet bestaat
-  shell: |
-    mysql -h {{ wp_db_host }} -P {{ wp_db_port | default(3306) }} \
-      -u deployer -p'{{ deployer_db_password }}' \
-      --ssl-mode=REQUIRED deployer -e \
-      "INSERT IGNORE INTO users (id, username, full_name, password, is_admin)
-       VALUES ('{{ deployer_admin_id }}', '{{ deployer_admin_user }}', '{{ deployer_admin_full_name }}', '{{ deployer_admin_password_hash }}', 1);"
-  changed_when: false
-  ignore_errors: true
-
 - name: Deployer systemd service installeren
   template:
     src: deployer.service.j2
@@ -136,3 +126,12 @@
   retries: 10
   delay: 3
   until: deployer_health.status == 200
+
+- name: Seed admin user als die nog niet bestaat
+  shell: |
+    mysql -h {{ wp_db_host }} -P {{ wp_db_port | default(3306) }} \
+      -u deployer -p'{{ deployer_db_password }}' \
+      --ssl-mode=REQUIRED deployer -e \
+      "INSERT IGNORE INTO users (id, username, full_name, password, is_admin)
+       VALUES ('{{ deployer_admin_id }}', '{{ deployer_admin_user }}', '{{ deployer_admin_full_name }}', '{{ deployer_admin_password_hash }}', 1);"
+  changed_when: false
