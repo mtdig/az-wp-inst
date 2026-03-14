@@ -96,6 +96,21 @@
                 <span>Azure authenticatie verloopt automatisch via de <strong>managed identity</strong> van de server. Geen Service Principal nodig.</span>
             </div>
 
+            <!-- SSH sleutel -->
+            <div class="divider">SSH Sleutel</div>
+
+            <div class="form-control">
+                <label class="label" for="admin_public_key">
+                    <span class="label-text">SSH publieke sleutel</span>
+                </label>
+                <textarea id="admin_public_key" name="admin_public_key" rows="3"
+                          placeholder="ssh-ed25519 AAAA... gebruiker@host"
+                          class="textarea textarea-bordered w-full font-mono text-xs" required></textarea>
+                <label class="label">
+                    <span class="label-text-alt">Plak hier je publieke sleutel (bv. inhoud van <code>~/.ssh/id_ed25519.pub</code>). Deze wordt gebruikt om in te loggen op je VM.</span>
+                </label>
+            </div>
+
             <!-- Wachtwoorden -->
             <div class="divider">Wachtwoorden</div>
 

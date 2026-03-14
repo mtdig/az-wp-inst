@@ -77,6 +77,13 @@ async fn main() -> anyhow::Result<()> {
     {
         sqlx::query(statement).execute(&pool).await.ok();
     }
+    for statement in include_str!("../migrations/003_add_admin_public_key.sql")
+        .split(';')
+        .map(str::trim)
+        .filter(|s| !s.is_empty() && !s.starts_with("--"))
+    {
+        sqlx::query(statement).execute(&pool).await.ok();
+    }
     tracing::info!("Migraties uitgevoerd");
 
     // Sessie store (in-memory, voldoende voor enkele VM)

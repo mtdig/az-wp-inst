@@ -75,6 +75,7 @@ pub struct Deployment {
     pub mysql_server_name: String,
     pub mysql_admin_login: String,
     pub mysql_admin_password_ref: String,
+    pub admin_public_key: String,
 
     // Terraform outputs
     pub tf_public_ip: String,

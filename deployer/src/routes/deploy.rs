@@ -51,6 +51,7 @@ pub struct NewDeployForm {
     mysql_server_name: String,
     mysql_admin_login: String,
     mysql_admin_password: String,
+    admin_public_key: String,
     ansible_become_password: String,
     wp_admin_password: String,
     db_wp_password: String,
@@ -121,8 +122,9 @@ pub async fn create(
            (id, user_id, name, status,
             subscription_id, resource_group_name, public_ip_dns_label,
             mysql_server_name, mysql_admin_login, mysql_admin_password_ref,
+            admin_public_key,
             ansible_become_password_ref, wp_admin_password_ref, db_wp_password_ref)
-           VALUES (?, ?, ?, 'draft', ?, ?, ?, ?, ?, ?, ?, ?, ?)"#,
+           VALUES (?, ?, ?, 'draft', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"#,
     )
     .bind(&id)
     .bind(&user_id)
@@ -133,6 +135,7 @@ pub async fn create(
     .bind(&form.mysql_server_name)
     .bind(&form.mysql_admin_login)
     .bind(&form.mysql_admin_password)
+    .bind(&form.admin_public_key)
     .bind(&form.ansible_become_password)
     .bind(&form.wp_admin_password)
     .bind(&form.db_wp_password)

@@ -106,7 +106,7 @@ impl Orchestrator {
             "ARM_SUBSCRIPTION_ID": d.subscription_id,
             "ARM_TENANT_ID": std::env::var("ARM_TENANT_ID").unwrap_or_default(),
             "TF_VAR_subscription_id": d.subscription_id,
-            "TF_VAR_admin_public_key": "",
+            "TF_VAR_admin_public_key": d.admin_public_key,
             "TF_VAR_mysql_admin_password": d.mysql_admin_password_ref,
             "TF_VAR_resource_group_name": d.resource_group_name,
             "TF_VAR_public_ip_dns_label": d.public_ip_dns_label,
