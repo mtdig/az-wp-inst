@@ -1,8 +1,7 @@
 use chrono::NaiveDateTime;
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, sqlx::Type)]
-#[sqlx(rename_all = "lowercase")]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum DeploymentStatus {
     Draft,
     Provisioning,
@@ -12,6 +11,24 @@ pub enum DeploymentStatus {
     Failed,
     Destroying,
     Destroyed,
+}
+
+impl TryFrom<String> for DeploymentStatus {
+    type Error = String;
+
+    fn try_from(s: String) -> Result<Self, Self::Error> {
+        match s.as_str() {
+            "draft" => Ok(Self::Draft),
+            "provisioning" => Ok(Self::Provisioning),
+            "provisioned" => Ok(Self::Provisioned),
+            "configuring" => Ok(Self::Configuring),
+            "ready" => Ok(Self::Ready),
+            "failed" => Ok(Self::Failed),
+            "destroying" => Ok(Self::Destroying),
+            "destroyed" => Ok(Self::Destroyed),
+            other => Err(format!("Ongeldige status: {other}")),
+        }
+    }
 }
 
 impl std::fmt::Display for DeploymentStatus {
@@ -48,6 +65,7 @@ pub struct Deployment {
     pub id: String,
     pub user_id: String,
     pub name: String,
+    #[sqlx(try_from = "String")]
     pub status: DeploymentStatus,
 
     // Azure / Terraform inputs
