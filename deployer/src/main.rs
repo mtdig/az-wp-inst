@@ -5,7 +5,6 @@ mod services;
 
 use axum::{Router, routing::get, routing::post};
 use sqlx::mysql::MySqlPoolOptions;
-use tower_http::services::ServeDir;
 use tower_sessions::SessionManagerLayer;
 use tower_sessions::MemoryStore;
 use tracing_subscriber::EnvFilter;
@@ -17,6 +16,9 @@ pub struct AppState {
     pub semaphore_user: String,
     pub semaphore_password: String,
     pub semaphore_project_id: i64,
+    /// Base path waaronder de app draait, bv. "/app" (zonder trailing slash).
+    /// Leeg als de app op "/" draait.
+    pub base_path: String,
 }
 
 #[tokio::main]
@@ -46,6 +48,11 @@ async fn main() -> anyhow::Result<()> {
         .unwrap_or_else(|_| "1".into())
         .parse()
         .expect("SEMAPHORE_PROJECT_ID moet een getal zijn");
+    // Base path voor reverse proxy, bv. "/app" (zonder trailing slash)
+    let base_path = std::env::var("BASE_PATH")
+        .unwrap_or_default()
+        .trim_end_matches('/')
+        .to_string();
 
     // Database
     let pool = MySqlPoolOptions::new()
@@ -78,10 +85,11 @@ async fn main() -> anyhow::Result<()> {
         semaphore_user,
         semaphore_password,
         semaphore_project_id,
+        base_path: base_path.clone(),
     };
 
     // Routes
-    let app = Router::new()
+    let inner = Router::new()
         // Auth
         .route(
             "/login",
@@ -108,11 +116,16 @@ async fn main() -> anyhow::Result<()> {
         )
         .route("/deploy/{id}/status", get(routes::deploy::poll_status))
         .route("/deploy/{id}/output", get(routes::deploy::get_output))
-        // Static files
-        .nest_service("/static", ServeDir::new("static"))
-        // Middleware
-        .layer(session_layer)
         .with_state(state);
+
+    // Nest onder BASE_PATH als die gezet is
+    let app = if base_path.is_empty() {
+        inner.layer(session_layer)
+    } else {
+        Router::new()
+            .nest(&base_path, inner)
+            .layer(session_layer)
+    };
 
     let listener = tokio::net::TcpListener::bind(&listen_addr).await?;
     tracing::info!("Deployer luistert op http://{listen_addr}");

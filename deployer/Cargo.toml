@@ -8,7 +8,6 @@ edition = "2024"
 axum = { version = "0.8", features = ["macros"] }
 tokio = { version = "1", features = ["full"] }
 tower = "0.5"
-tower-http = { version = "0.6", features = ["fs", "trace", "compression-gzip"] }
 tower-sessions = "0.14"
 
 # Templates

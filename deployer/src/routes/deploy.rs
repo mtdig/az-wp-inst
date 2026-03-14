@@ -22,18 +22,21 @@ use crate::{
 #[derive(Template)]
 #[template(path = "deploy_new.html")]
 struct NewDeployTemplate {
+    base: String,
     error: Option<String>,
 }
 
 #[derive(Template)]
 #[template(path = "deploy_detail.html")]
 struct DeployDetailTemplate {
+    base: String,
     deployment: Deployment,
 }
 
 #[derive(Template)]
 #[template(path = "partials/status_badge.html")]
 struct StatusBadgeTemplate {
+    base: String,
     deployment: Deployment,
 }
 
@@ -78,7 +81,7 @@ async fn get_deployment_for_user(
 ) -> Result<Deployment, Response> {
     let user_id = require_auth(session)
         .await
-        .ok_or_else(|| Redirect::to("/login").into_response())?;
+        .ok_or_else(|| Redirect::to(&format!("{}/login", state.base_path)).into_response())?;
 
     sqlx::query_as::<_, Deployment>(
         "SELECT * FROM deployments WHERE id = ? AND user_id = ?",
@@ -93,10 +96,10 @@ async fn get_deployment_for_user(
 
 //  Handlers 
 
-pub async fn new_page(session: Session) -> Response {
+pub async fn new_page(State(state): State<AppState>, session: Session) -> Response {
     match require_auth(&session).await {
-        Some(_) => HtmlTemplate(NewDeployTemplate { error: None }).into_response(),
-        None => Redirect::to("/login").into_response(),
+        Some(_) => HtmlTemplate(NewDeployTemplate { error: None, base: state.base_path }).into_response(),
+        None => Redirect::to(&format!("{}/login", state.base_path)).into_response(),
     }
 }
 
@@ -107,7 +110,7 @@ pub async fn create(
 ) -> Response {
     let user_id = match require_auth(&session).await {
         Some(id) => id,
-        None => return Redirect::to("/login").into_response(),
+        None => return Redirect::to(&format!("{}/login", state.base_path)).into_response(),
     };
 
     let id = Uuid::new_v4().to_string();
@@ -141,9 +144,10 @@ pub async fn create(
     .await;
 
     match result {
-        Ok(_) => Redirect::to(&format!("/deploy/{id}")).into_response(),
+        Ok(_) => Redirect::to(&format!("{}/deploy/{id}", state.base_path)).into_response(),
         Err(e) => HtmlTemplate(NewDeployTemplate {
             error: Some(format!("Fout bij opslaan: {e}")),
+            base: state.base_path,
         })
         .into_response(),
     }
@@ -155,7 +159,7 @@ pub async fn detail(
     Path(deploy_id): Path<String>,
 ) -> Response {
     match get_deployment_for_user(&state, &session, &deploy_id).await {
-        Ok(d) => HtmlTemplate(DeployDetailTemplate { deployment: d }).into_response(),
+        Ok(d) => HtmlTemplate(DeployDetailTemplate { base: state.base_path, deployment: d }).into_response(),
         Err(r) => r,
     }
 }
@@ -189,7 +193,7 @@ pub async fn start_provision(
         .await
         .unwrap_or(d);
 
-    HtmlTemplate(StatusBadgeTemplate { deployment: d }).into_response()
+    HtmlTemplate(StatusBadgeTemplate { base: state.base_path, deployment: d }).into_response()
 }
 
 /// htmx endpoint: start Ansible configuratie via Semaphore.
@@ -220,7 +224,7 @@ pub async fn start_configure(
         .await
         .unwrap_or(d);
 
-    HtmlTemplate(StatusBadgeTemplate { deployment: d }).into_response()
+    HtmlTemplate(StatusBadgeTemplate { base: state.base_path, deployment: d }).into_response()
 }
 
 /// htmx endpoint: start Terraform destroy via Semaphore.
@@ -251,7 +255,7 @@ pub async fn start_destroy(
         .await
         .unwrap_or(d);
 
-    HtmlTemplate(StatusBadgeTemplate { deployment: d }).into_response()
+    HtmlTemplate(StatusBadgeTemplate { base: state.base_path, deployment: d }).into_response()
 }
 
 /// htmx polling endpoint: haal huidige status op.
@@ -274,7 +278,7 @@ pub async fn poll_status(
     .await;
 
     match deployment {
-        Ok(Some(d)) => HtmlTemplate(StatusBadgeTemplate { deployment: d }).into_response(),
+        Ok(Some(d)) => HtmlTemplate(StatusBadgeTemplate { base: state.base_path, deployment: d }).into_response(),
         _ => StatusCode::NOT_FOUND.into_response(),
     }
 }

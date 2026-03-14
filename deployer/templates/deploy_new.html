@@ -3,7 +3,7 @@
 {% block title %}Nieuwe Deployment{% endblock %}
 
 {% block nav_right %}
-<a href="/" class="btn btn-ghost btn-sm">← Terug</a>
+<a href="{{ base }}/" class="btn btn-ghost btn-sm">← Terug</a>
 {% endblock %}
 
 {% block content %}
@@ -17,7 +17,7 @@
         </div>
         {% endif %}
 
-        <form method="POST" action="/deploy" class="space-y-6">
+        <form method="POST" action="{{ base }}/deploy" class="space-y-6">
             <!-- Basis -->
             <div class="divider">Naam</div>
 

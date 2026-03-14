@@ -4,7 +4,7 @@
 
 {% block nav_right %}
 <span class="mr-4 text-sm">{{ user_name }}</span>
-<a href="/logout" class="btn btn-ghost btn-sm">Uitloggen</a>
+<a href="{{ base }}/logout" class="btn btn-ghost btn-sm">Uitloggen</a>
 {% endblock %}
 
 {% block content %}
@@ -20,13 +20,13 @@
     <div class="card-body items-center text-center py-16">
         <h2 class="text-xl opacity-60 mb-2">Nog geen deployments</h2>
         <p class="opacity-40 mb-4">Maak een nieuwe deployment aan om je WordPress stack op Azure te bouwen.</p>
-        <a href="/deploy/new" class="btn btn-primary">Aan de slag →</a>
+        <a href="{{ base }}/deploy/new" class="btn btn-primary">Aan de slag →</a>
     </div>
 </div>
 {% else %}
 <div class="grid gap-4">
     {% for d in &deployments %}
-    <a href="/deploy/{{ d.id }}" class="card bg-base-100 shadow hover:shadow-lg transition-shadow">
+    <a href="{{ base }}/deploy/{{ d.id }}" class="card bg-base-100 shadow hover:shadow-lg transition-shadow">
         <div class="card-body flex-row items-center justify-between">
             <div>
                 <h3 class="card-title text-lg">{{ d.name }}</h3>

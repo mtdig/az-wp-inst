@@ -1,7 +1,8 @@
 ProxyPreserveHost On
 
-ProxyPass        /app/ http://127.0.0.1:{{ deployer_port | default(3001) }}/
-ProxyPassReverse /app/ http://127.0.0.1:{{ deployer_port | default(3001) }}/
+# De app draait intern met BASE_PATH=/app, dus /app/ → /app/
+ProxyPass        /app/ http://127.0.0.1:{{ deployer_port | default(3001) }}/app/
+ProxyPassReverse /app/ http://127.0.0.1:{{ deployer_port | default(3001) }}/app/
 
 # Trailing-slash redirect
 RedirectMatch 301 ^/app$ /app/

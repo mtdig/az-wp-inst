@@ -21,17 +21,11 @@
 
 - name: Deployer-mappen aanmaken
   file:
-    path: "{{ item }}"
+    path: /opt/deployer
     state: directory
     owner: deployer
     group: deployer
     mode: "0755"
-  loop:
-    - /opt/deployer
-    - /opt/deployer/static
-    - /opt/deployer/templates
-    - /opt/deployer/templates/partials
-    - /opt/deployer/migrations
 
 - name: Deployer binary downloaden van GitHub release
   get_url:
@@ -41,26 +35,6 @@
     group: deployer
     mode: "0755"
     force: true
-  notify: Deployer herstarten
-
-- name: Deployer HTML templates kopiëren
-  copy:
-    src: "{{ deployer_src_dir }}/templates/"
-    dest: /opt/deployer/templates/
-    owner: deployer
-    group: deployer
-    mode: "0644"
-    directory_mode: "0755"
-  notify: Deployer herstarten
-
-- name: Deployer migraties kopiëren
-  copy:
-    src: "{{ deployer_src_dir }}/migrations/"
-    dest: /opt/deployer/migrations/
-    owner: deployer
-    group: deployer
-    mode: "0644"
-    directory_mode: "0755"
   notify: Deployer herstarten
 
 - name: Deployer .env configuratie

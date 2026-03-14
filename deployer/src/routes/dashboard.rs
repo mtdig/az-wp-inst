@@ -7,6 +7,7 @@ use crate::{html::HtmlTemplate, models::Deployment, routes::auth::require_auth, 
 #[derive(Template)]
 #[template(path = "dashboard.html")]
 struct DashboardTemplate {
+    base: String,
     user_name: String,
     deployments: Vec<Deployment>,
 }
@@ -14,7 +15,7 @@ struct DashboardTemplate {
 pub async fn index(State(state): State<AppState>, session: Session) -> impl IntoResponse {
     let user_id = match require_auth(&session).await {
         Some(id) => id,
-        None => return axum::response::Redirect::to("/login").into_response(),
+        None => return axum::response::Redirect::to(&format!("{}/login", state.base_path)).into_response(),
     };
 
     let user = sqlx::query_as::<_, crate::models::User>("SELECT * FROM users WHERE id = ?")
@@ -32,6 +33,7 @@ pub async fn index(State(state): State<AppState>, session: Session) -> impl Into
     .unwrap_or_default();
 
     HtmlTemplate(DashboardTemplate {
+        base: state.base_path,
         user_name: user.full_name,
         deployments,
     })

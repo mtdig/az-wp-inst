@@ -7,7 +7,7 @@ use axum::{
 };
 use tower_sessions::Session;
 
-use crate::{html::HtmlTemplate, AppState};
+use crate::{AppState, html::HtmlTemplate};
 
 const SESSION_USER_KEY: &str = "user_id";
 
@@ -16,13 +16,14 @@ const SESSION_USER_KEY: &str = "user_id";
 #[derive(Template)]
 #[template(path = "login.html")]
 struct LoginTemplate {
+    base: String,
     error: Option<String>,
 }
 
 //  Handlers 
 
-pub async fn login_page() -> impl IntoResponse {
-    HtmlTemplate(LoginTemplate { error: None })
+pub async fn login_page(State(state): State<AppState>) -> impl IntoResponse {
+    HtmlTemplate(LoginTemplate { base: state.base_path, error: None })
 }
 
 #[derive(serde::Deserialize)]
@@ -51,9 +52,10 @@ pub async fn login_submit(
     if authenticated {
         let u = user.unwrap().unwrap();
         session.insert(SESSION_USER_KEY, &u.id).await.ok();
-        Redirect::to("/").into_response()
+        Redirect::to(&format!("{}/", state.base_path)).into_response()
     } else {
         HtmlTemplate(LoginTemplate {
+            base: state.base_path,
             error: Some("Ongeldige gebruikersnaam of wachtwoord.".into()),
         })
         .into_response()
@@ -75,9 +77,9 @@ fn verify_password(password: &str, stored: &str) -> bool {
     password == stored
 }
 
-pub async fn logout(session: Session) -> Redirect {
+pub async fn logout(State(state): State<AppState>, session: Session) -> Redirect {
     session.delete().await.ok();
-    Redirect::to("/login")
+    Redirect::to(&format!("{}/login", state.base_path))
 }
 
 /// Middleware-helper: haal user_id uit session, redirect naar login als niet ingelogd.

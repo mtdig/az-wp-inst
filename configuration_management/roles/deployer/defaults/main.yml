@@ -7,11 +7,9 @@ deployer_version: "{{ lookup('file', playbook_dir + '/../../deployer/version.txt
 deployer_release_url: >-
   https://github.com/{{ deployer_github_repo }}/releases/download/deployer-{{ deployer_version }}/deployer
 
-# Pad naar de deployer source dir (voor templates/ en migrations/)
-deployer_src_dir: "{{ playbook_dir }}/../../deployer"
-
 # Netwerk
 deployer_port: 3001
+deployer_base_path: /app
 
 # Database (draait op dezelfde MySQL als Semaphore)
 deployer_db_password: deployer
