@@ -139,12 +139,20 @@
     dest: /etc/apache2/conf-available/deployer.conf
   notify: Apache herstarten
 
-- name: Deployer Apache configuratie inschakelen
-  file:
-    src: /etc/apache2/conf-available/deployer.conf
-    dest: /etc/apache2/conf-enabled/deployer.conf
-    state: link
+# De proxy-directives moeten *binnen* de VirtualHost blokken staan,
+# anders worden ze genegeerd. We injecteren een Include in elke vhost.
+- name: Deployer proxy Include toevoegen aan WordPress VirtualHost configs
+  lineinfile:
+    path: "{{ item }}"
+    line: "    Include /etc/apache2/conf-available/deployer.conf"
+    insertbefore: "</VirtualHost>"
+    regexp: "Include.*deployer\\.conf"
+    state: present
+  loop:
+    - /etc/apache2/sites-available/wordpress.conf
+    - /etc/apache2/sites-enabled/wordpress-le-ssl.conf
   notify: Apache herstarten
+  ignore_errors: true
 
 - name: Wacht tot Deployer draait
   uri:
