@@ -31,7 +31,7 @@
     - name: Waarschuwing - herstart vereist
       debug:
         msg: >-
-          ⚠️  Er is een herstart nodig om alle updates te activeren.
+          WAARSCHUWING: Er is een herstart nodig om alle updates te activeren.
           Start de VM handmatig opnieuw op via de Azure Portal of
           voer 'sudo reboot' uit via SSH.
       when: reboot_required.stat.exists

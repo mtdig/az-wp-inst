@@ -94,39 +94,39 @@
                         hx-post="{{ base }}/deploy/{{ deployment.id }}/configure"
                         hx-target="#status-badge"
                         hx-swap="innerHTML">
-                    ⚙️ Stack configureren
+                    Stack configureren
                 </button>
                 <button class="btn btn-error btn-outline"
                         hx-post="{{ base }}/deploy/{{ deployment.id }}/destroy"
                         hx-target="#status-badge"
                         hx-swap="innerHTML"
                         hx-confirm="Weet je zeker dat je alle resources wilt vernietigen?">
-                    💥 Vernietigen
+                    Vernietigen
                 </button>
                 {% when DeploymentStatus::Ready %}
                 <a href="https://{{ deployment.tf_public_fqdn }}" target="_blank"
                    class="btn btn-success">
-                    🌐 Open WordPress
+                    Open WordPress
                 </a>
                 <button class="btn btn-warning btn-outline"
                         hx-post="{{ base }}/deploy/{{ deployment.id }}/configure"
                         hx-target="#status-badge"
                         hx-swap="innerHTML">
-                    🔄 Herconfigureren
+                    Herconfigureren
                 </button>
                 <button class="btn btn-error btn-outline"
                         hx-post="{{ base }}/deploy/{{ deployment.id }}/destroy"
                         hx-target="#status-badge"
                         hx-swap="innerHTML"
                         hx-confirm="Weet je zeker dat je alle resources wilt vernietigen?">
-                    💥 Vernietigen
+                    Vernietigen
                 </button>
                 {% when DeploymentStatus::Failed %}
                 <button class="btn btn-warning"
                         hx-post="{{ base }}/deploy/{{ deployment.id }}/provision"
                         hx-target="#status-badge"
                         hx-swap="innerHTML">
-                    🔄 Opnieuw proberen
+                    Opnieuw proberen
                 </button>
                 {% when _ %}
                 <p class="text-sm opacity-60 italic">Bewerking bezig, even geduld…</p>
