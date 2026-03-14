@@ -58,6 +58,12 @@
   vars:
     ssh_config_path: "{{ lookup('env', 'HOME') }}/.ssh/config"
   tasks:
+    - name: SSH directory aanmaken als het niet bestaat
+      file:
+        path: "{{ lookup('env', 'HOME') }}/.ssh"
+        state: directory
+        mode: "0700"
+
     - name: Backup maken van SSH config
       copy:
         src: "{{ ssh_config_path }}"
