@@ -193,7 +193,7 @@
           allow_override_args_in_task: false
           suppress_success_alerts: false
           survey_vars: []
-        - name: "🚀 Infrastructuur aanmaken (apply)"
+        - name: " Infrastructuur aanmaken (apply)"
           app: "terraform"
           playbook: "provisioning"
           description: >-
@@ -224,7 +224,7 @@
           suppress_success_alerts: false
           survey_vars: []
         # -- Configuratie view (Ansible) --
-        - name: "🚀 Volledige stack deployen"
+        - name: " Volledige stack deployen"
           app: "ansible"
           playbook: "configuration_management/playbooks/site.yml"
           description: >-
