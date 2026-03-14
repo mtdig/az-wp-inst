@@ -52,7 +52,7 @@ pub async fn login_submit(
     if authenticated {
         let u = user.unwrap().unwrap();
         session.insert(SESSION_USER_KEY, &u.id).await.ok();
-        Redirect::to(&format!("{}/", state.base_path)).into_response()
+        Redirect::to(&format!("{}", if state.base_path.is_empty() { "/".to_string() } else { state.base_path.clone() })).into_response()
     } else {
         HtmlTemplate(LoginTemplate {
             base: state.base_path,

@@ -122,8 +122,14 @@ async fn main() -> anyhow::Result<()> {
     let app = if base_path.is_empty() {
         inner.layer(session_layer)
     } else {
+        let bp = base_path.clone();
         Router::new()
             .nest(&base_path, inner)
+            // Redirect /app/ -> /app (nest() matcht niet op trailing slash)
+            .route(
+                &format!("{}/", base_path),
+                get(move || async move { axum::response::Redirect::permanent(&bp) }),
+            )
             .layer(session_layer)
     };
 
