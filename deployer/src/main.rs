@@ -63,26 +63,27 @@ async fn main() -> anyhow::Result<()> {
     tracing::info!("Database verbonden");
 
     // Migraties uitvoeren
-    for statement in include_str!("../migrations/001_initial.sql")
-        .split(';')
-        .map(str::trim)
-        .filter(|s| !s.is_empty() && !s.starts_with("--"))
-    {
-        sqlx::query(statement).execute(&pool).await.ok();
-    }
-    for statement in include_str!("../migrations/002_drop_sp_columns.sql")
-        .split(';')
-        .map(str::trim)
-        .filter(|s| !s.is_empty() && !s.starts_with("--"))
-    {
-        sqlx::query(statement).execute(&pool).await.ok();
-    }
-    for statement in include_str!("../migrations/003_add_admin_public_key.sql")
-        .split(';')
-        .map(str::trim)
-        .filter(|s| !s.is_empty() && !s.starts_with("--"))
-    {
-        sqlx::query(statement).execute(&pool).await.ok();
+    let migrations: &[(&str, &str)] = &[
+        ("001_initial", include_str!("../migrations/001_initial.sql")),
+        ("002_drop_sp_columns", include_str!("../migrations/002_drop_sp_columns.sql")),
+        ("003_add_admin_public_key", include_str!("../migrations/003_add_admin_public_key.sql")),
+    ];
+    for (name, sql) in migrations {
+        for statement in sql
+            .split(';')
+            .map(str::trim)
+            .filter(|s| !s.is_empty() && !s.starts_with("--"))
+        {
+            if let Err(e) = sqlx::query(statement).execute(&pool).await {
+                // Duplicate column / table already exists → verwacht bij herstart
+                let msg = e.to_string();
+                if msg.contains("Duplicate") || msg.contains("already exists") {
+                    tracing::debug!("Migratie {name}: overgeslagen (al toegepast)");
+                } else {
+                    tracing::warn!("Migratie {name} fout: {e}");
+                }
+            }
+        }
     }
     tracing::info!("Migraties uitgevoerd");
 
