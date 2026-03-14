@@ -145,7 +145,7 @@
       repositories:
         - name: "az-wp-inst"
           git_url: "{{ semaphore_git_url | default('https://github.com/mtdig/az-wp-inst.git') }}"
-          git_branch: "{{ semaphore_git_branch | default('main') }}"
+          git_branch: "{{ semaphore_git_branch | default('feat/semaphore-ui') }}"
           ssh_key: "Geen"
       inventories:
         - name: "Azure VM"
