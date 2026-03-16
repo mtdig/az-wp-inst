@@ -194,7 +194,7 @@ module "database" {
   geo_redundant_backup  = false
   ha_mode               = "Disabled"
 
-  firewall_rules = {}
+  firewall_rules = []
   allow_vm       = true
   vm_public_ip   = module.network.public_ip_address
 
