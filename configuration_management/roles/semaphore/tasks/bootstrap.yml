@@ -164,7 +164,7 @@
         - name: "Productie"
           password: ""
           json: "{{ sem_env_json }}"
-          env: "{}"
+          env: '{"ANSIBLE_ROLES_PATH": "configuration_management/roles"}'
         - name: "Terraform"
           password: ""
           json: "{{ sem_tf_env_json }}"
@@ -180,7 +180,7 @@
         # -- Provisioning view (Terraform) --
         - name: "Infrastructuur plannen (plan)"
           app: "terraform"
-          playbook: "provisioning"
+          playbook: "semaphore/provisioning"
           description: >-
             Toont welke Azure resources Terraform zou aanmaken, wijzigen of
             verwijderen. Er wordt niets gewijzigd – dit is alleen een preview.
@@ -195,7 +195,7 @@
           survey_vars: []
         - name: "Infrastructuur aanmaken (apply)"
           app: "terraform"
-          playbook: "provisioning"
+          playbook: "semaphore/provisioning"
           description: >-
             Maakt de volledige Azure infrastructuur aan of past wijzigingen toe:
             Resource Group, VNet, NSG, Publiek IP, VM en MySQL Flexible Server.
@@ -210,7 +210,7 @@
           survey_vars: []
         - name: "Infrastructuur vernietigen (destroy)"
           app: "terraform"
-          playbook: "provisioning"
+          playbook: "semaphore/provisioning"
           description: >-
             WAARSCHUWING: Verwijdert ALLE Azure resources in de resourcegroep!
             Dit omvat de VM, MySQL database, netwerk en alle data.
@@ -226,7 +226,7 @@
         # -- Configuratie view (Ansible) --
         - name: "Volledige stack deployen"
           app: "ansible"
-          playbook: "configuration_management/playbooks/site.yml"
+          playbook: "semaphore/playbooks/site.yml"
           description: >-
             Configureert de volledige WordPress stack: Apache, PHP, WordPress,
             Let's Encrypt, UFW, fail2ban en alle optionele componenten
@@ -250,7 +250,7 @@
                 "true": "Ja – common role overslaan"
         - name: "Alleen WordPress herconfigureren"
           app: "ansible"
-          playbook: "configuration_management/playbooks/site.yml"
+          playbook: "semaphore/playbooks/site.yml"
           description: >-
             Voert alleen de WordPress configuratie uit (wp-config.php, plugins, thema).
             Handig na het wijzigen van database-instellingen of WordPress opties.
@@ -266,7 +266,7 @@
         # -- Onderhoud view --
         - name: "Beveiliging bijwerken"
           app: "ansible"
-          playbook: "configuration_management/playbooks/site.yml"
+          playbook: "semaphore/playbooks/site.yml"
           description: >-
             Draait alleen de beveiligingsconfiguratie: SSH hardening, UFW firewall
             regels, fail2ban jails. Gebruik na wijziging van beveiligingsbeleid.
@@ -281,7 +281,7 @@
           survey_vars: []
         - name: "Systeem pakketten updaten"
           app: "ansible"
-          playbook: "configuration_management/playbooks/update.yml"
+          playbook: "semaphore/playbooks/update.yml"
           description: >-
             Werkt alle systeem pakketten bij (apt upgrade) en herstart
             services indien nodig. Gebruik voor periodiek onderhoud.

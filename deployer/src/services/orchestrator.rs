@@ -170,6 +170,7 @@ impl Orchestrator {
             "wp_locale": "nl_BE",
             "skip_common": false,
             "certbot_staging": true,
+            "admin_public_key": d.admin_public_key,
             "enable_vaultwarden": false,
             "vaultwarden_admin_token": "",
             "enable_tech_snake": false,
@@ -191,7 +192,7 @@ impl Orchestrator {
             project_id: self.sem.project_id,
             password: String::new(),
             json: Self::build_ansible_env(d).to_string(),
-            env: "{}".to_string(),
+            env: r#"{"ANSIBLE_ROLES_PATH": "configuration_management/roles"}"#.to_string(),
         };
 
         if let Some(existing_id) = existing_id {

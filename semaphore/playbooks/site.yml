@@ -1,0 +1,56 @@
+# =============================================================================
+# Semaphore Playbook – student WordPress stack
+#
+# Vereenvoudigde versie van configuration_management/playbooks/site.yml
+# voor gebruik door de Deployer webapp via Semaphore.
+#
+# Verschillen met het lokale playbook:
+#   - Geen optionele componenten (vaultwarden, tech_snake, semaphore, deployer)
+#   - Geen lokale SSH config update (draait in Semaphore container)
+#   - Wel: admin_public_key toevoegen aan authorized_keys
+#   - roles_path verwijst naar de gedeelde rollen
+# =============================================================================
+---
+- name: WordPress stack (Semaphore)
+  hosts: all
+  become: true
+  gather_subset: min
+
+  pre_tasks:
+    - name: Overschrijf wp_domain met Azure publieke FQDN vanuit Terraform
+      set_fact:
+        wp_domain: "{{ tf_public_fqdn }}"
+      when: tf_public_fqdn is defined and tf_public_fqdn | length > 0
+
+    - name: Overschrijf DB host met Terraform output indien aanwezig
+      set_fact:
+        wp_db_host: "{{ tf_mysql_fqdn }}"
+      when: tf_mysql_fqdn is defined
+
+    - name: Overschrijf DB admin user met Terraform output indien aanwezig
+      set_fact:
+        wp_db_admin_user: "{{ tf_mysql_admin_login }}"
+      when: tf_mysql_admin_login is defined
+
+    - name: SSH publieke sleutel toevoegen aan authorized_keys
+      authorized_key:
+        user: "{{ ansible_user | default('osboxes') }}"
+        key: "{{ admin_public_key }}"
+        state: present
+      when: admin_public_key is defined and admin_public_key | length > 0
+
+  roles:
+    - role: common
+      when: not (skip_common | default(false) | bool)
+    - mysql_client
+    - wordpress
+
+  post_tasks:
+    - name: Toon verbindingsinformatie
+      debug:
+        msg:
+          - "=========================================="
+          - "WordPress is beschikbaar op:"
+          - "https://{{ wp_domain }}"
+          - "MySQL: {{ wp_db_host | default('onbekend') }}:{{ wp_db_port | default(3306) }}"
+          - "=========================================="

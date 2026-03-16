@@ -176,6 +176,12 @@ variable "auto_shutdown_enabled" {
   default     = true
 }
 
+variable "assign_vm_role" {
+  description = "Ken Contributor rol toe aan VM managed identity (vereist Owner rechten)"
+  type        = bool
+  default     = false
+}
+
 variable "auto_shutdown_time" {
   description = "Auto-shutdown tijdstip (UU:mm)"
   type        = string

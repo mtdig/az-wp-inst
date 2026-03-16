@@ -11,6 +11,13 @@
     - { regexp: '^#?ChallengeResponseAuthentication', line: 'ChallengeResponseAuthentication no' }
   notify: SSH herstarten
 
+- name: SSH publieke sleutel toevoegen aan authorized_keys
+  authorized_key:
+    user: "{{ ansible_user }}"
+    key: "{{ admin_public_key }}"
+    state: present
+  when: admin_public_key is defined and admin_public_key | length > 0
+
 - name: Pakketten installeren
   apt:
     name: [ufw, fail2ban, neofetch]

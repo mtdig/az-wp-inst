@@ -80,10 +80,12 @@ module "compute" {
 
 # -----------------------------------------------------------------------------
 # Managed Identity – Contributor rol voor VM (Semaphore/Terraform auth)
+# Vereist Owner rechten; standaard uitgeschakeld voor deployer-runs.
 # -----------------------------------------------------------------------------
 data "azurerm_subscription" "current" {}
 
 resource "azurerm_role_assignment" "vm_contributor" {
+  count                = var.assign_vm_role ? 1 : 0
   scope                = data.azurerm_subscription.current.id
   role_definition_name = "Contributor"
   principal_id         = module.compute.identity_principal_id
