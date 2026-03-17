@@ -15,7 +15,7 @@ variable "resource_group_name" {
 variable "location" {
   description = "Azure regio voor alle resources"
   type        = string
-  default     = "francecentral"
+  default     = "swedencentral"
 }
 
 variable "tags" {

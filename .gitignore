@@ -31,3 +31,6 @@ vault.yml
 config-starter/config-starter
 config-starter/bin/
 config-backup/
+
+# in-progress scripts
+deployer/
