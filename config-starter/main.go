@@ -80,6 +80,9 @@ type AnsibleVars struct {
 	EnableVaultwarden     bool   `json:"enable_vaultwarden"`
 	VaultwardenAdminToken string `json:"vaultwarden_admin_token,omitempty"`
 	EnableTechSnake       bool   `json:"enable_tech_snake"`
+	EnableOsNpe           bool   `json:"enable_os_npe"`
+	OsNpeStudentFullName  string `json:"os_npe_student_full_name,omitempty"`
+	OsNpeStudentCode      string `json:"os_npe_student_code,omitempty"`
 
 	SSHHostAlias string `json:"ssh_host_alias"`
 	SSHKey       string `json:"ssh_key"`
@@ -615,7 +618,7 @@ func main() {
 				Value(&tf.ResourceGroupName),
 			huh.NewInput().
 				Title("DNS Label").
-				Description("Publiek IP DNS label -> <label>.francecentral.cloudapp.azure.com").
+				Description("Publiek IP DNS label -> <label>.swedencentral.cloudapp.azure.com").
 				Value(&tf.PublicIPDNSLabel),
 			huh.NewInput().
 				Title("MySQL Server Naam").
@@ -723,6 +726,18 @@ func main() {
 				Title("Tech Snake").
 				Description("snake game (WASM op /snake)").
 				Value(&ans.EnableTechSnake),
+			huh.NewConfirm().
+				Title("OS-NPE 2526").
+				Description("OS-NPE container + Valkey cache (op /os-npe-2526)").
+				Value(&ans.EnableOsNpe),
+			huh.NewInput().
+				Title("Student Volledige Naam").
+				Description("voor OS-NPE container (STUDENT_FULL_NAME)").
+				Value(&ans.OsNpeStudentFullName),
+			huh.NewInput().
+				Title("Student Code").
+				Description("voor OS-NPE container (STUDENT_CODE)").
+				Value(&ans.OsNpeStudentCode),
 		),
 
 		huh.NewGroup(

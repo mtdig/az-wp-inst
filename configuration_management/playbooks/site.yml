@@ -28,6 +28,8 @@
       when: enable_vaultwarden | default(false) | bool
     - role: tech_snake
       when: enable_tech_snake | default(false) | bool
+    - role: os_npe
+      when: enable_os_npe | default(false) | bool
 
   post_tasks:
     - name: Toon verbindingsinformatie
@@ -42,6 +44,7 @@
           - "{{ 'Vaultwarden Admin: https://' + wp_domain + '/secrets/admin' if (enable_vaultwarden | default(false) | bool and vaultwarden_admin_token | default('') | length > 0) else '' }}"
           - "{{ 'Admin Token:       ' + vaultwarden_admin_token if (enable_vaultwarden | default(false) | bool and vaultwarden_admin_token | default('') | length > 0) else '' }}"
           - "{{ 'Tech Snake:        https://' + wp_domain + '/snake' if (enable_tech_snake | default(false) | bool) else '' }}"
+          - "{{ 'OS-NPE 2526:       https://' + wp_domain + '/os-npe-2526' if (enable_os_npe | default(false) | bool) else '' }}"
           - "=========================================="
 
 - name: Lokale SSH config bijwerken

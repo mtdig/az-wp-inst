@@ -1,0 +1,8 @@
+ProxyPreserveHost On
+RequestHeader set X-Forwarded-Proto "https"
+
+ProxyPass        /os-npe-2526/ http://127.0.0.1:8082/
+ProxyPassReverse /os-npe-2526/ http://127.0.0.1:8082/
+
+# Trailing-slash redirect
+RedirectMatch 301 ^/os-npe-2526$ /os-npe-2526/

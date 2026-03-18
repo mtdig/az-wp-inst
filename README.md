@@ -220,7 +220,7 @@ ssh azosboxes
 ssh osboxes@$(cd provisioning && terraform output -raw public_ip_address)
 
 # WordPress openen
-# Open: https://<dns-label>.francecentral.cloudapp.azure.com
+# Open: https://<dns-label>.swedencentral.cloudapp.azure.com
 ```
 
 ## Opruimen

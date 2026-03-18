@@ -18,6 +18,9 @@
   "enable_vaultwarden": false,
   "vaultwarden_admin_token": "",
   "enable_tech_snake": false,
+  "enable_os_npe": false,
+  "os_npe_student_full_name": "",
+  "os_npe_student_code": "",
 
   "ssh_host_alias": "azosboxes",
   "ssh_key": "~/.ssh/id_ed25519_hogent"
