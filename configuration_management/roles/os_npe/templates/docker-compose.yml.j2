@@ -1,0 +1,18 @@
+services:
+  valkey:
+    image: valkey/valkey:9-alpine
+    container_name: valkey
+    restart: always
+
+  os-npe:
+    image: thomasae97/os-npe-2526
+    container_name: os-npe
+    restart: always
+    depends_on:
+      - valkey
+    environment:
+      - STUDENT_FULL_NAME={{ os_npe_student_full_name }}
+      - STUDENT_CODE={{ os_npe_student_code }}
+      - VALKEY_HOST=valkey
+    ports:
+      - "127.0.0.1:8082:80"

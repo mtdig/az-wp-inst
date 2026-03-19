@@ -45,7 +45,7 @@ var (
 	borderCl = lipgloss.Color("#00CC00")
 	redCl    = lipgloss.Color("#FF0000")
 
-	tabNames = []string{"AZURE", "WACHTWOORDEN", "WORDPRESS", "DATABASE", "COMPONENTEN", "SSH & OPTIES"}
+	tabNames = []string{"AZURE", "WACHTWOORDEN", "WORDPRESS", "DATABASE", "COMPONENTEN", "SSH & OPTIES", "AWS"}
 )
 
 // vars
@@ -57,6 +57,15 @@ type TerraformVars struct {
 	MysqlServerName    string `json:"mysql_server_name"`
 	MysqlAdminLogin    string `json:"mysql_admin_login"`
 	MysqlAdminPassword string `json:"mysql_admin_password"`
+}
+
+type AwsTerraformVars struct {
+	AwsAccessKey    string `json:"aws_access_key"`
+	AwsSecretKey    string `json:"aws_secret_key"`
+	AwsSessionToken string `json:"aws_session_token"`
+	Region          string `json:"region"`
+	InstanceType    string `json:"instance_type"`
+	VmName          string `json:"vm_name"`
 }
 
 type AnsibleVars struct {
@@ -80,6 +89,10 @@ type AnsibleVars struct {
 	EnableVaultwarden     bool   `json:"enable_vaultwarden"`
 	VaultwardenAdminToken string `json:"vaultwarden_admin_token,omitempty"`
 	EnableTechSnake       bool   `json:"enable_tech_snake"`
+	EnableOsNpe           bool   `json:"enable_os_npe"`
+	OsNpeStudentFullName  string `json:"os_npe_student_full_name,omitempty"`
+	OsNpeStudentCode      string `json:"os_npe_student_code,omitempty"`
+	AwsSshHostAlias       string `json:"aws_ssh_host_alias,omitempty"`
 
 	SSHHostAlias string `json:"ssh_host_alias"`
 	SSHKey       string `json:"ssh_key"`
@@ -184,6 +197,7 @@ type model struct {
 	form        *huh.Form
 	root        string
 	tf          *TerraformVars
+	awsTf       *AwsTerraformVars
 	ans         *AnsibleVars
 	dbPort      string
 	confirmSave *bool
@@ -255,9 +269,18 @@ func (m *model) saveFiles() {
 	}
 
 	if err := writeJSON(ansPath, m.ans); err != nil {
-		lines = append(lines, fmt.Sprintf("  ✗ %s: %s", ansPath, err.Error()))
+		lines = append(lines, fmt.Sprintf("  \u2717 %s: %s", ansPath, err.Error()))
 	} else {
-		lines = append(lines, fmt.Sprintf("  ✓ %s", ansPath))
+		lines = append(lines, fmt.Sprintf("  \u2713 %s", ansPath))
+	}
+
+	if m.awsTf.AwsAccessKey != "" {
+		awsTfPath := filepath.Join(m.root, "aws_terraform.tfvars.json")
+		if err := writeJSON(awsTfPath, m.awsTf); err != nil {
+			lines = append(lines, fmt.Sprintf("  \u2717 %s: %s", awsTfPath, err.Error()))
+		} else {
+			lines = append(lines, fmt.Sprintf("  \u2713 %s", awsTfPath))
+		}
 	}
 
 	lines = append(lines, "")
@@ -397,6 +420,7 @@ func (m model) currentGroup() int {
 		"DATABASE",
 		"OPTIONELE COMPONENTEN",
 		"SSH & OPTIES",
+		"AWS / EC2",
 	}
 	for i, mk := range markers {
 		if strings.Contains(v, mk) {
@@ -556,6 +580,9 @@ func main() {
 	tf := loadJSON[TerraformVars](tfPath, tfExample)
 	ans := loadJSON[AnsibleVars](ansPath, ansExample)
 
+	awsTfPath := filepath.Join(root, "aws_terraform.tfvars.json")
+	awsTf := loadJSON[AwsTerraformVars](awsTfPath, awsTfPath)
+
 	// defaults
 	if ans.WpPath == "" {
 		ans.WpPath = "/var/www/wordpress"
@@ -579,6 +606,18 @@ func main() {
 		b := make([]byte, 32)
 		_, _ = rand.Read(b)
 		ans.VaultwardenAdminToken = hex.EncodeToString(b)
+	}
+	if awsTf.Region == "" {
+		awsTf.Region = "eu-west-1"
+	}
+	if awsTf.InstanceType == "" {
+		awsTf.InstanceType = "t3.small"
+	}
+	if awsTf.VmName == "" {
+		awsTf.VmName = "os-npe-vm"
+	}
+	if ans.AwsSshHostAlias == "" {
+		ans.AwsSshHostAlias = "aws-os-npe"
 	}
 
 	if tf.ResourceGroupName == "" {
@@ -615,7 +654,7 @@ func main() {
 				Value(&tf.ResourceGroupName),
 			huh.NewInput().
 				Title("DNS Label").
-				Description("Publiek IP DNS label -> <label>.francecentral.cloudapp.azure.com").
+				Description("Publiek IP DNS label -> <label>.swedencentral.cloudapp.azure.com").
 				Value(&tf.PublicIPDNSLabel),
 			huh.NewInput().
 				Title("MySQL Server Naam").
@@ -723,6 +762,22 @@ func main() {
 				Title("Tech Snake").
 				Description("snake game (WASM op /snake)").
 				Value(&ans.EnableTechSnake),
+			huh.NewConfirm().
+				Title("OS-NPE 2526").
+				Description("OS-NPE container + Valkey cache (op /os-npe-2526)").
+				Value(&ans.EnableOsNpe),
+			huh.NewInput().
+				Title("Student Volledige Naam").
+				Description("voor OS-NPE container (STUDENT_FULL_NAME)").
+				Value(&ans.OsNpeStudentFullName),
+			huh.NewInput().
+				Title("Student Code").
+				Description("voor OS-NPE container (STUDENT_CODE)").
+				Value(&ans.OsNpeStudentCode),
+			huh.NewInput().
+				Title("AWS SSH Host Alias").
+				Description("Naam in ~/.ssh/config voor de AWS VM (leeg = geen AWS)").
+				Value(&ans.AwsSshHostAlias),
 		),
 
 		huh.NewGroup(
@@ -745,6 +800,38 @@ func main() {
 				Title("Certbot Staging").
 				Description("Staging server (hogere rate limits, ongeldig cert)?").
 				Value(&ans.CertbotStg),
+		),
+
+		huh.NewGroup(
+			huh.NewNote().
+				Title("\u2588 AWS / EC2").
+				Description("OS-NPE op AWS (optioneel \u2013 laat Access Key leeg om over te slaan)"),
+			huh.NewInput().
+				Title("AWS Access Key ID").
+				Description("IAM access key").
+				Value(&awsTf.AwsAccessKey),
+			huh.NewInput().
+				Title("AWS Secret Access Key").
+				Description("IAM secret key").
+				EchoMode(huh.EchoModePassword).
+				Value(&awsTf.AwsSecretKey),
+			huh.NewInput().
+				Title("AWS Session Token").
+				Description("Vereist voor Academy Labs, leeg laten voor gewone IAM").
+				EchoMode(huh.EchoModePassword).
+				Value(&awsTf.AwsSessionToken),
+			huh.NewInput().
+				Title("AWS Regio").
+				Description("bijv. eu-west-1, eu-central-1").
+				Value(&awsTf.Region),
+			huh.NewInput().
+				Title("Instance Type").
+				Description("EC2 instance grootte").
+				Value(&awsTf.InstanceType),
+			huh.NewInput().
+				Title("VM Naam").
+				Description("naam tag voor de EC2 instance").
+				Value(&awsTf.VmName),
 			huh.NewConfirm().
 				Title("Configuratie opslaan?").
 				Description("Bestanden worden aangemaakt in de projectroot.").
@@ -759,6 +846,7 @@ func main() {
 		form:        form,
 		root:        root,
 		tf:          &tf,
+		awsTf:       &awsTf,
 		ans:         &ans,
 		dbPort:      dbPortStr,
 		confirmSave: &confirmSave,

@@ -43,6 +43,7 @@ endef
 # =============================================================================
 
 .PHONY: help init plan apply configure all destroy clean info
+.PHONY: aws-init aws-plan aws-apply aws-configure aws-all aws-destroy aws-clean aws-info
 
 help: ## Toon deze hulptekst
 	@grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | \
@@ -63,7 +64,7 @@ apply: ## Azure infrastructuur aanmaken
 # ---------------------------------------------------------------------------
 # Configuratiebeheer (Ansible)
 # ---------------------------------------------------------------------------
-configure: ## Ansible playbook uitvoeren met Terraform outputs
+configure: ## ansible playbook uitvoeren met Terraform outputs
 	$(eval VM_IP          := $(call tf_output,public_ip_address))
 	$(eval ADMIN_USER     := $(call tf_output,admin_username))
 	$(eval MYSQL_FQDN     := $(call tf_output,mysql_fqdn))
@@ -112,3 +113,53 @@ clean: ## Lokale Terraform state & cache verwijderen
 # ---------------------------------------------------------------------------
 info: ## Terraform outputs tonen
 	@$(TF) output
+
+# =============================================================================
+#  AWS – OS-NPE op EC2
+# =============================================================================
+AWS_TF_DIR   := provisioning/aws
+AWS_TF       := terraform -chdir=$(AWS_TF_DIR)
+AWS_TF_VARS  := ../../aws_terraform.tfvars.json
+AWS_TF_FLAGS := -var-file="$(AWS_TF_VARS)" -var="admin_public_key=$$(cat $(SSH_PUB_KEY))"
+AWS_ANSIBLE_VARS := ../ansible_vars.json
+
+define aws_tf_output
+$(shell $(AWS_TF) output -raw $(1) 2>/dev/null)
+endef
+
+aws-init: ## AWS Terraform initialiseren
+	$(AWS_TF) init
+
+aws-plan: ## Toon wat AWS Terraform zou wijzigen
+	$(AWS_TF) plan $(AWS_TF_FLAGS)
+
+aws-apply: ## AWS EC2 instance aanmaken
+	$(AWS_TF) apply $(AWS_TF_FLAGS) -auto-approve
+
+aws-configure: ## AWS VM configureren met Ansible (OS-NPE stack)
+	$(eval AWS_VM_IP     := $(call aws_tf_output,public_ip_address))
+	$(eval AWS_ADMIN     := $(call aws_tf_output,admin_username))
+	$(eval AWS_DNS       := $(call aws_tf_output,public_dns))
+	@echo "──────────────────────────────────────────────"
+	@echo "  AWS VM IP     : $(AWS_VM_IP)"
+	@echo "  Admin user    : $(AWS_ADMIN)"
+	@echo "  Public DNS    : $(AWS_DNS)"
+	@echo "──────────────────────────────────────────────"
+	cd $(ANSIBLE_DIR) && uv run ansible-playbook playbooks/aws-os-npe.yml \
+		-i "$(AWS_VM_IP)," \
+		-u "$(AWS_ADMIN)" \
+		--private-key $(SSH_KEY) \
+		-e @$(AWS_ANSIBLE_VARS) \
+		-e '{"ansible_host":"$(AWS_VM_IP)","aws_public_dns":"$(AWS_DNS)","admin_public_key":"'"$$(cat $(SSH_PUB_KEY))"'","ssh_key":"$(SSH_KEY)"}'
+
+aws-all: aws-apply aws-configure ## AWS apply + configure
+
+aws-destroy: ## AWS resources verwijderen
+	$(AWS_TF) destroy $(AWS_TF_FLAGS) -auto-approve
+
+aws-clean: ## AWS Terraform state verwijderen
+	rm -rf $(AWS_TF_DIR)/.terraform $(AWS_TF_DIR)/.terraform.lock.hcl
+	rm -f  $(AWS_TF_DIR)/terraform.tfstate $(AWS_TF_DIR)/terraform.tfstate.backup
+
+aws-info: ## AWS Terraform outputs tonen
+	@$(AWS_TF) output

@@ -38,7 +38,7 @@ variable "public_ip_name" {
   type = string
 }
 variable "dns_label" {
-  description = "DNS label voor het publiek IP (wordt <label>.francecentral.cloudapp.azure.com)"
+  description = "DNS label voor het publiek IP (wordt <label>.swedencentral.cloudapp.azure.com)"
   type        = string
   default     = ""
 }

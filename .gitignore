@@ -16,6 +16,7 @@ terraform.rc
 *.auto.tfvars
 secret.tfvars
 terraform.tfvars.json
+aws_terraform.tfvars.json
 ansible_vars.json
 
 
