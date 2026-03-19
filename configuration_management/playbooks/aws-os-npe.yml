@@ -1,0 +1,86 @@
+---
+# AWS OS-NPE playbook
+# Configureert een EC2 Ubuntu VM met Apache + Docker + os-npe containers.
+
+- name: OS-NPE stack (AWS)
+  hosts: all
+  become: true
+  gather_subset: min
+
+  pre_tasks:
+    - name: SSH publieke sleutel toevoegen aan authorized_keys
+      authorized_key:
+        user: "{{ ansible_user }}"
+        key: "{{ admin_public_key }}"
+        state: present
+      when: admin_public_key is defined and admin_public_key | length > 0
+
+    - name: Apache installeren
+      apt:
+        name: [apache2]
+        state: present
+        update_cache: true
+
+    - name: Apache starten en inschakelen
+      service:
+        name: apache2
+        state: started
+        enabled: true
+
+  roles:
+    - role: common
+      when: not (skip_common | default(false) | bool)
+    - os_npe
+
+  post_tasks:
+    - name: Toon verbindingsinformatie
+      debug:
+        msg:
+          - "=========================================="
+          - "OS-NPE is beschikbaar op:"
+          - "  http://{{ ansible_host }}/os-npe-2526/"
+          - "  http://{{ aws_public_dns }}/os-npe-2526/"
+          - ""
+          - "Public DNS: {{ aws_public_dns }}"
+          - "SSH: ssh {{ aws_ssh_host_alias | default('aws-os-npe') }}"
+          - "=========================================="
+
+- name: Lokale SSH config bijwerken (AWS)
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  vars:
+    ssh_config_path: "{{ lookup('env', 'HOME') }}/.ssh/config"
+  tasks:
+    - name: Backup maken van SSH config
+      copy:
+        src: "{{ ssh_config_path }}"
+        dest: "{{ ssh_config_path }}.bak"
+        remote_src: true
+        mode: "0600"
+      when: ssh_config_path is file
+
+    - name: SSH config bestand aanmaken als het niet bestaat
+      file:
+        path: "{{ ssh_config_path }}"
+        state: touch
+        mode: "0600"
+      changed_when: false
+
+    - name: Bestaand AWS OS-NPE blok verwijderen
+      blockinfile:
+        path: "{{ ssh_config_path }}"
+        marker: "# {mark} ANSIBLE MANAGED - {{ aws_ssh_host_alias | default('aws-os-npe') }}"
+        state: absent
+
+    - name: SSH config blok voor AWS OS-NPE toevoegen
+      blockinfile:
+        path: "{{ ssh_config_path }}"
+        marker: "# {mark} ANSIBLE MANAGED - {{ aws_ssh_host_alias | default('aws-os-npe') }}"
+        block: |
+          Host {{ aws_ssh_host_alias | default('aws-os-npe') }}
+              HostName {{ hostvars[groups['all'][0]]['ansible_host'] }}
+              User {{ hostvars[groups['all'][0]]['ansible_user'] | default('ubuntu') }}
+              IdentityFile {{ ssh_key }}
+              StrictHostKeyChecking no
+              UserKnownHostsFile /dev/null

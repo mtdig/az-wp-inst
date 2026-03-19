@@ -21,6 +21,7 @@
   "enable_os_npe": false,
   "os_npe_student_full_name": "",
   "os_npe_student_code": "",
+  "aws_ssh_host_alias": "aws-os-npe",
 
   "ssh_host_alias": "azosboxes",
   "ssh_key": "~/.ssh/id_ed25519_hogent"
