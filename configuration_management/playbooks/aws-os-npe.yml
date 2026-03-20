@@ -27,6 +27,15 @@
         state: started
         enabled: true
 
+    - name: ansible_user toevoegen aan docker groep
+      user:
+        name: "{{ ansible_user }}"
+        groups: docker
+        append: true
+
+  vars:
+    os_npe_proxy_path: "/"
+
   roles:
     - role: common
       when: not (skip_common | default(false) | bool)
@@ -38,8 +47,8 @@
         msg:
           - "=========================================="
           - "OS-NPE is beschikbaar op:"
-          - "  http://{{ ansible_host }}/os-npe-2526/"
-          - "  http://{{ aws_public_dns }}/os-npe-2526/"
+          - "  http://{{ ansible_host }}/"
+          - "  http://{{ aws_public_dns }}/"
           - ""
           - "Public DNS: {{ aws_public_dns }}"
           - "SSH: ssh {{ aws_ssh_host_alias | default('aws-os-npe') }}"
