@@ -79,12 +79,12 @@ type AnsibleVars struct {
 	WpDBPort int    `json:"wp_db_port"`
 	WpDBSSL  bool   `json:"wp_db_ssl"`
 
-	WpAdminUser  string `json:"wp_admin_user"`
-	WpAdminEmail string `json:"wp_admin_email"`
-	WpTitle      string `json:"wp_title"`
-	WpLocale     string `json:"wp_locale"`
-	SkipCommon   bool   `json:"skip_common"`
-	CertbotStg   bool   `json:"certbot_staging"`
+	WpAdminUser    string `json:"wp_admin_user"`
+	WpAdminEmail   string `json:"wp_admin_email"`
+	WpTitle        string `json:"wp_title"`
+	WpLocale       string `json:"wp_locale"`
+	SkipCommon     bool   `json:"skip_common"`
+	CertbotStg     bool   `json:"certbot_staging"`
 	ExternalDomain string `json:"external_domain,omitempty"`
 
 	EnableVaultwarden     bool   `json:"enable_vaultwarden"`
