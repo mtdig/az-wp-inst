@@ -1,5 +1,8 @@
 <VirtualHost *:80>
     ServerName {{ wp_domain }}
+{% if external_fqdn | default('') | length > 0 %}
+    ServerAlias {{ external_fqdn }}
+{% endif %}
     DocumentRoot {{ wp_path }}
 
     <Directory {{ wp_path }}>

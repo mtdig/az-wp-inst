@@ -85,6 +85,7 @@ type AnsibleVars struct {
 	WpLocale     string `json:"wp_locale"`
 	SkipCommon   bool   `json:"skip_common"`
 	CertbotStg   bool   `json:"certbot_staging"`
+	ExternalDomain string `json:"external_domain,omitempty"`
 
 	EnableVaultwarden     bool   `json:"enable_vaultwarden"`
 	VaultwardenAdminToken string `json:"vaultwarden_admin_token,omitempty"`
@@ -800,6 +801,10 @@ func main() {
 				Title("Certbot Staging").
 				Description("Staging server (hogere rate limits, ongeldig cert)?").
 				Value(&ans.CertbotStg),
+			huh.NewInput().
+				Title("Extern Domein").
+				Description("Basisdomain (bijv. groep99.be) -- wordt {dns-label}.groep99.be").
+				Value(&ans.ExternalDomain),
 		),
 
 		huh.NewGroup(

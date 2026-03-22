@@ -77,17 +77,31 @@
   delay: 10
   changed_when: false
 
+- name: Wacht tot DNS voor {{ external_fqdn }} resolveerbaar is
+  command: dig +short {{ external_fqdn }}
+  register: ext_dns_check
+  until: ext_dns_check.stdout | trim | length > 0
+  retries: 15
+  delay: 10
+  changed_when: false
+  when: external_fqdn | default('') | length > 0
+
+- name: Certbot domeinen samenstellen
+  set_fact:
+    certbot_domains: >-
+      -d {{ wp_domain }}{{ ' -d ' + external_fqdn if external_fqdn | default('') | length > 0 else '' }}
+
 - name: Let's Encrypt certificaat aanvragen via certbot
   command:
     cmd: >-
       certbot --apache
-      -d {{ wp_domain }}
+      {{ certbot_domains }}
       --non-interactive
       --agree-tos
       --email {{ certbot_email | default('jeroen.vanrenterghem@student.hogent.be') }}
       --redirect
+      --keep-until-expiring
       {{ '--staging' if certbot_staging | default(false) | bool else '' }}
-    creates: /etc/letsencrypt/live/{{ wp_domain }}/fullchain.pem
 
 - name: WP-CLI downloaden
   get_url:
