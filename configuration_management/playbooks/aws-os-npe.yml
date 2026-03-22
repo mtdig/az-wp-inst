@@ -1,6 +1,5 @@
 ---
 # AWS OS-NPE playbook
-# Configureert een EC2 Ubuntu VM met Apache + Docker + os-npe containers.
 
 - name: OS-NPE stack (AWS)
   hosts: all
